@@ -18,8 +18,8 @@ thing appear, and what would a change here touch?
 
 ## 1. Name the thing, not the component
 
-Write in one phrase what the element shows, in the product's words: "an agent's weekly
-spend", "whether an agent is asleep", "who can open an artifact". That phrase is the
+Write in one phrase what the element shows, in the product's words: "a customer's monthly
+total", "whether an invoice is overdue", "who can see an invoice". That phrase is the
 `concept`. The same concept can look different in each place: a chip in a list, a number on
 a page, a sentence in a Slack alert, a column in the command line.
 
@@ -40,7 +40,7 @@ Then read, do not count:
 
 - Keep a place when a person meets the same concept there. Drop a file that only passes the
   data through.
-- Name each place as a person finds it ("Home → the week's total"), never as a file path.
+- Name each place as a person finds it ("Dashboard → the month's total"), never as a file path.
 - Look beyond the code `design where` reads: the product's glossary (the profile's
   `docs.glossary`), its documentation, the catalog's elements (`design desk cards --kind
   element`), and the messages other systems send (an alert, an email).
@@ -77,7 +77,7 @@ not read code. Write each one like a short note to a colleague:
 - **Only what a designer can act on.** Leave out an effect that only a developer would notice.
 
 The same holds for an earlier decision's `text`: say what was decided and why it still matters,
-in one plain sentence ("Spend limits start again every Monday, for everyone at once").
+in one plain sentence ("Monthly totals start again on the 1st, for everyone at once").
 
 **Under the hood (`behind`).** A short text, not a list: one to three small paragraphs, at most
 about 120 words, on whether the change needs more than a new look — and how big that is. Say
@@ -95,13 +95,13 @@ On a card, one `design desk upsert` with:
 
 ```json
 {"id": "R-12", "impact": {
-  "concept": "an agent's weekly spend",
-  "places": [{"where": "Agents list", "how": "the amount on each row, amber near the limit", "kind": "screen"},
-             {"where": "Slack spend alert", "how": "“Agent X reached its spend limit”", "kind": "message"}],
-  "behind": {"text": "Today the product only counts spend per week, and the weekly limit is built on that. A daily bar means it has to start counting each day, and the limit has to decide whether a day or a week counts — like a household budget that suddenly needs a daily allowance too. That is a change to how spending works, so a developer and the product owner decide it first.",
+  "concept": "a customer's monthly total",
+  "places": [{"where": "Invoices list", "how": "the customer's total on each row, amber near the credit limit", "kind": "screen"},
+             {"where": "Credit limit email", "how": "“Customer X reached its credit limit”", "kind": "email"}],
+  "behind": {"text": "Today the product only totals invoices per month, and the credit limit is built on that. A weekly bar means it has to start totalling each week, and the limit has to decide whether a week or a month counts — like a household budget that suddenly needs a weekly allowance too. That is a change to how totals work, so a developer and the product owner decide it first.",
              "sources": [{"label": "pull request #5810", "url": "https://github.com/…"}]},
   "decisions": [{"id": "D-7", "when": "2026-09-14"},
-                {"text": "Spend limits reset every Monday (UTC) for everyone.", "when": "2026-09-14",
+                {"text": "Monthly totals reset on the 1st (UTC) for every customer.", "when": "2026-09-14",
                  "source": {"label": "pull request #5810", "url": "https://github.com/…"}}]}}
 ```
 

@@ -1,7 +1,7 @@
 # The UI catalog
 
 The catalog shows the product's real UI elements, each drawn in every state it can be in,
-side by side: an agent row running, asleep, over budget, with a long name… A designer opens
+side by side: an invoice row paid, overdue, disputed, with a long customer name… A designer opens
 **Product → Elements** on the Desk, picks an element, and sees all of it at once.
 
 Every tile is the **real component from the product's code**, rendered with the data of
@@ -12,7 +12,7 @@ needed, and the tiles change when the code changes.
 
 A card of kind `element` on the Desk:
 
-- `title` — the element's name in the product's words ("Agent row");
+- `title` — the element's name in the product's words ("Invoice row");
 - `group` — its family under Product → Elements ("Lists and rows", "Status", "Dialogs"); it sorts the list and is not shown on the element's page;
 - `summary` — one sentence: what it is and where people see it, in plain words ([desk.md](desk.md) → Writing on the Desk);
 - `source` — `{repo, file, export, commit}`: the component, at the commit drawn; the card shows

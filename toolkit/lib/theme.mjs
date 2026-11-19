@@ -18,7 +18,7 @@ export function tokens(brand = null) {
   const accent = brand?.colors?.accent || w.interactive;
   const accentDark = brand?.colors?.accentDark || (brand?.colors?.accent ? mix(brand.colors.accent, "#ffffff", 0.25) : g.interactive);
   const ink = brand?.colors?.ink || w.textPrimary;
-  // Carbon's primary button is blue. A brand may make it its ink instead (DAM-style black).
+  // Carbon's primary button is blue. A brand may make it its ink instead (a black primary, say).
   const primary = brand?.colors?.primary || accent;
   const primaryDark = brand?.colors?.primaryDark || (brand?.colors?.primary ? (brand.colors.primary === ink ? g.textPrimary : mix(brand.colors.primary, "#ffffff", 0.25)) : accentDark);
   const light = {

@@ -11,14 +11,14 @@ It lives on the screens instance ([screens.md](screens.md)), so it needs `screen
 
 A card of kind `screen`, found again by its `path`:
 
-- `title` — the screen's name in the product's words ("Agents list");
+- `title` — the screen's name in the product's words ("Invoices list");
 - `group` — the area it belongs to ("Agents", "Settings");
 - `path` — its address in the product (`/agents`);
 - `summary` — one or two sentences: what a person does here;
 - `how` — how a person gets there, in their clicks: "Sidebar → Agents";
 - `screens` — the current pictures, light and dark, `source: "instance"`;
 - `elements` — the catalog elements on it (element card ids);
-- `concepts` — the product's ideas it shows ("an agent's weekly spend"), in the glossary's
+- `concepts` — the product's ideas it shows ("a customer's monthly total"), in the glossary's
   words: the timeline "Why it is like this" lists the decisions about them;
 - `changes` — the change cards that touched it, oldest first;
 - `instance` — as on a change card, so people open the screen on the live product;
