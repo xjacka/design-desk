@@ -31,7 +31,6 @@
 /.agents/skills/*
 !/.agents/skills/brand
 !/.agents/skills/copy
-!/.agents/skills/demo-video
 !/.agents/skills/explain
 !/.agents/skills/figma
 !/.agents/skills/grill-me
@@ -41,7 +40,6 @@
 !/.agents/skills/show-me
 !/.agents/skills/slack-council
 !/.agents/skills/slack-polls
-!/.agents/skills/slides
 !/.agents/skills/variants
 !/.agents/skills/walkthrough
 

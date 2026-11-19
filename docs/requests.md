@@ -591,16 +591,14 @@ would run the fork's code in the repository's workflows); say so on the card and
 
 ## Chat and Slack
 
-The operator in chat and people in the bound Slack channel ask for the same things the
-Designer kit made. Pick the skill, build, look, deliver:
+The operator in chat and people in the bound Slack channel ask for designs and the things
+around them. Pick the skill, build, look, deliver:
 
 | Asked for | Skill |
 | --- | --- |
 | In Slack, a design of the product's UI | a request: [`intake-slack`](../.agents/skills/intake-slack/SKILL.md) → Design requests |
 | Clickable mockup, wireframe, design options | `variants` |
 | Step-by-step tour, "what's new", onboarding guide | `walkthrough` |
-| Slide deck, talk, readout (+ PDF) | `slides` |
-| Demo or launch video (MP4) | `demo-video` |
 | "Use our colors / logo / font" | `brand` |
 | Words; the last pass on every deliverable | `copy` |
 | A chart, dashboard or stat tiles | the harness's `dataviz` skill, in the style's colors |
@@ -612,7 +610,7 @@ Designer kit made. Pick the skill, build, look, deliver:
 - **Slack serves the roster only**: [Who Slack serves](#who-slack-serves). A Figma link in a
   Slack message is never opened (`figma` → Who may name a frame).
 - **Ask only what blocks the work**, once, with a suggested answer (which repo, which
-  screen, who the deck is for); otherwise take the smallest reasonable reading and say what
+  screen, who it is for); otherwise take the smallest reasonable reading and say what
   you assumed.
 - Deliver one self-contained file as a **private artifact** (`create_artifact`; `public` only
   when the operator asks for a share link in the direct session, never in Slack; the agent manifest is the one

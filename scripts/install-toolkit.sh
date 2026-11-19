@@ -3,7 +3,7 @@
 # `install` step runs it before the first session, ONBOARDING runs it again, and
 # the agent re-runs it whenever `design doctor` reports a FAIL.
 #
-#   1. npm packages of ~/toolkit (Tailwind, React, Playwright, ffmpeg, Carbon,
+#   1. npm packages of ~/toolkit (Tailwind, React, Playwright, Carbon,
 #      fonts), from its package.json: the home disk, so they last across restarts.
 #   2. A headless Chromium. The image's Playwright Chromium is used when present;
 #      otherwise a self-contained one from @sparticuz/chromium is unpacked into
@@ -25,11 +25,9 @@ if [ ! -f "$TK/package.json" ]; then
 fi
 
 # 1. Packages, exactly as package-lock.json pins them and with no install script (a
-# drifted lock fails here, never resolves afresh); ffmpeg-static's download runs below.
+# drifted lock fails here, never resolves afresh).
 if (cd "$TK" && npm ci --ignore-scripts --no-audit --no-fund --loglevel=error) >/dev/null; then
-  ff="$TK/node_modules/ffmpeg-static/ffmpeg"
-  if [ ! -x "$ff" ]; then (cd "$TK/node_modules/ffmpeg-static" && node install.js >/dev/null 2>&1); fi
-  [ -x "$ff" ] && echo "ok   packages — $TK/node_modules" || { echo "FAIL ffmpeg — the ffmpeg-static binary did not download (github.com release assets must be reachable)"; fail=1; }
+  echo "ok   packages — $TK/node_modules"
 else
   echo "FAIL packages — npm ci failed in $TK (is registry.npmjs.org reachable? does package-lock.json match package.json?)"; fail=1
 fi
