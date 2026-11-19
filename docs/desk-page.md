@@ -211,7 +211,8 @@ worklist does not need it; what a run does on the Desk is in [desk.md](desk.md).
   of Questions and comments, whose **Send review…** opens the same dialog. ⋯ holds **Close…** or **Reopen** on a request, **Turn into a design request** on a
   change (and **Undo approval** on one approved), and **Open on GitHub** where there is a link. No vote buttons, rename or For Developers
   move. Under the head the page reads one way for both kinds: a short lead (a request's first
-  paragraph, a change's summary), **The request in full** folded, the designs (a request's
+  paragraph, a change's summary), **The request in full** folded, a request's **How it looks
+  today**, the designs (a request's
   options, votes as counts only) or **The changes** (a change's screens), **What Design Desk
   found** (the decisions in force it goes against, a change's reasons to look at it, how it
   differs from the approved design, Figma when on, its check holding the pull request; else

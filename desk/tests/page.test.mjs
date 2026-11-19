@@ -4192,8 +4192,8 @@ test("simple mode heads a change with its pull request, Approve and Turn into a 
   await desk.waitForFunction(() => posts.some((p) => /P-3/.test(p.path)));
 }));
 
-// Simple mode's page under the head (docs/desk-page.md → Simple mode): a short lead, the designs,
-// what Design Desk found, the long reads folded, then the comments in threads.
+// Simple mode's page under the head (docs/desk-page.md → Simple mode): a short lead, how it looks
+// today, the designs, what Design Desk found, the long reads folded, then the comments in threads.
 const talked = { ...drawn, id: "R-7", title: "Talked about", request: { problem: "First paragraph.\n\nSecond paragraph." },
   conflicts: [{ decision: "D-3", status: "active", text: "One primary button per screen.", why: "Two primaries." }],
   impact: { concept: "the limit", places: [{ where: "Usage", kind: "screen", how: "Shows the same limit." }] },
@@ -4209,7 +4209,8 @@ test("simple mode's request page: lead, designs, what Design Desk found, folds, 
   await desk.click('#list [data-card="R-7"]');
   await desk.waitForSelector("#detail .sthreads");
   const order = await desk.$$eval("#detail .slead, #detail .vtabs, #detail .sfound, #detail details.fold.big:not(.vpanel details), #detail .sthreads", (xs) => xs.map((x) => x.className.split(" ")[0] === "fold" ? x.querySelector("summary").textContent.trim() : x.className.split(" ").find((k) => ["slead", "vtabs", "sfound", "sthreads"].includes(k))));
-  assert.deepEqual(order, ["slead", "The request in full", "vtabs", "sfound", "Where else this shows up", "sthreads"]);
+  // How it looks today follows the request in full, before the designs (docs/desk-page.md → How it looks today).
+  assert.deepEqual(order, ["slead", "The request in full", "How it looks todayThe screen as it is in the product now, before any design.", "vtabs", "sfound", "Where else this shows up", "sthreads"]);
   assert.equal((await desk.textContent("#detail .slead")).trim(), "First paragraph.", "the lead is the first paragraph");
   assert.match(await desk.textContent("#detail .sfound"), /Goes against D-3/);
   assert.equal(await desk.locator("#detail .votes button.vote").count(), 0, "no vote buttons in simple mode");
