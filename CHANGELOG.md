@@ -7,6 +7,16 @@ why lives in the PR and commit history, not here. Consumed by the version check
 ([docs/persistence.md](docs/persistence.md) → **Definition version & upgrade**);
 authoring rules: [docs/self-modification.md](docs/self-modification.md) §12.
 
+## 1.101.0 — 2026-11-19
+
+**Upgrade:**
+1. Rename the onboarding sentinel, so onboarding does not run again:
+   `[ -f "$HOME/.design-desk-onboarded" ] && mv "$HOME/.design-desk-onboarded" "$HOME/.xjacka-design-desk-onboarded"`.
+2. The kit id is `xjacka-design-desk`, and every schedule name carries it: `xjacka-design-desk-watch-hourly`,
+   `-inbox-10m`, `-monitor-15m`, `-digest-weekly`, `-issues-daily`, `-audit-weekly`. Reconcile the schedules
+   as [ONBOARDING.md](ONBOARDING.md) → 5b does: create each new name that is absent, then
+   `delete_schedule` each old `design-desk-*` one of the same job, so no job runs twice.
+
 ## 1.100.0 — 2026-11-18
 
 **Upgrade:**
