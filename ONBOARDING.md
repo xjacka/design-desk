@@ -432,7 +432,7 @@ Give the operator a short **summary**:
    - Anyone on the list asks questions on a card; designers file **New request**, and each
      request shows what happens next and whose turn it is.
    - In the chat: "mock up the empty state of …", "a deck from this doc", "what changed in
-     the agents list this month?" — the Designer kit's deliverables are all here.
+     the invoices list this month?" — the Designer kit's deliverables are all here.
    - To change who may do what, or any setting, say so in this chat.
 4. A **welcome note** the owner can paste to the team (in Slack or an email), filled in with
    the Desk's share link and the product's name:
