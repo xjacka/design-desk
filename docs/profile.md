@@ -118,5 +118,5 @@ A profile without `bin/env` gets variants and specs, no live prototype; the card
    save what they confirm (`design repo save`).
 2. Without `boundary`, no live prototype: triage still runs, variants still work, and the
    spec carries the whole change. Say this once on the Desk's first request card.
-3. Offer the operator to draft `.design-desk/<name>/` for the product team as a pull request
-   on their repository — only when they ask, and only as a draft they review.
+3. Offer the operator to draft `.design-desk/<name>/` for the product team — only when they
+   ask, and only as a draft pull request they review: the `profile` skill.

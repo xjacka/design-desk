@@ -9,6 +9,7 @@ export const ACTIONS = {
   "explain-change": { skill: "explain", doc: "docs/watch.md", does: "a card for a shipped or open UI change: screens, what, why, what cannot change" },
   answer: { skill: "explain", doc: "docs/desk.md", does: "answer a question about how the product works or why" },
   show: { skill: "show-me", does: "answer \"show me how it looks\" with a picture of the product in that state" },
+  profile: { skill: "profile", doc: "docs/profile.md", does: "draft a product's design profile from its repository, for the team to review as a draft pull request" },
   map: { doc: "docs/map.md", does: "the product map: every main screen, how to get there, why it is like it is" },
   digest: { doc: "docs/digest.md", does: "the weekly digest of the product's UX and the themes in people's feedback" },
   "issue-news": { doc: "docs/issues.md", does: "the Issues page: what each planned issue will need on the screens" },
