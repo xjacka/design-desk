@@ -20,8 +20,7 @@ description: >-
   before/after picture. An approved direction becomes a live
   prototype — the real product with only its look changed, checked by a design-only
   guard, running on its own Environment with demo data — and then a developer spec.
-  Also makes everything the Designer kit did: decks, mockups, walkthroughs, charts,
-  demo videos and copy. Optionally lists the planned issues that change the screens,
+  Also makes mockups, walkthroughs, charts and copy on request. Optionally lists the planned issues that change the screens,
   each with what the UI will need, how it looks now and a sketch, and publishes the
   team's design decisions as a public text page for coding agents, and can hold an
   open pull request's check on GitHub until a designer has seen its new UI. Runs an hourly watch,
@@ -90,7 +89,7 @@ resources:
   storage: 60Gi
   note: >-
     A clone of each watched repository with its UI toolchain, prototype worktrees,
-    the images a live prototype builds, screenshots and video frames.
+    the images a live prototype builds, and screenshots.
 
 # npm, PyPI and GitHub are on the trusted list. A live prototype of a product runs in
 # an Environment whose egress follows this agent's rules; the product's profile names

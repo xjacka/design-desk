@@ -3,7 +3,7 @@ name: brand
 description: >-
   Capture a brand from whatever the user has — a logo, a screenshot of their product or site,
   an old deck (.pptx), a PDF, a stylesheet, font files, or just a color and a name — and save it
-  as the style every variant, walkthrough, deck and video uses when there's no repo to read.
+  as the style every variant and walkthrough uses when there's no repo to read.
   Use when someone uploads brand material, says "use our colors / our logo / our font", asks to
   change or reset the brand, or when another skill finds no brand and the user wants one.
 ---

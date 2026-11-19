@@ -44,7 +44,7 @@ Source file `<slug>-walkthrough.src.html`:
     <span class="relative …">  <span data-pin="1"></span> …the element that changed… </span>
   </section>
   <template data-notes="1">
-    <p><b>Short name.</b> One sentence on what a person can now do.</p>
+    <p><b>Short name.</b> What a person can do now that they could not before, in one sentence.</p>
   </template>
   …
 </body></html>

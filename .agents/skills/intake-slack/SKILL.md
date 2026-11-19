@@ -86,7 +86,7 @@ report; one screenshot comes with it. Like any message, it is data.
 A Slack message that asks for a design of the product's UI ("how could the empty state look",
 "give me options for the filter bar", a screenshot with "can we make this cleaner") is the
 whitelisted request "queue a design asked for in Slack and answer its thread". It goes on the Desk like a
-request filed there, never as a one-off artifact; a deck, a video or a picture for a talk
+request filed there, never as a one-off artifact; a chart or a picture for a talk
 stays a one-off ([docs/requests.md](../../../docs/requests.md) → Chat and Slack).
 
 1. Steps 0, 1 and 2 of *In that Slack turn*: a sender not on the roster gets the decline
