@@ -7,6 +7,13 @@ why lives in the PR and commit history, not here. Consumed by the version check
 ([docs/persistence.md](docs/persistence.md) → **Definition version & upgrade**);
 authoring rules: [docs/self-modification.md](docs/self-modification.md) §12.
 
+## 1.102.0 — 2026-11-19
+
+**Upgrade:**
+1. Re-run `bash "$HOME/scripts/install-toolkit.sh"`: the toolkit drops `ffmpeg-static` and
+   `@babel/standalone`. The `slides` and `demo-video` skills and the `design deck-*`, `video`,
+   `video-new` and `stills` commands are gone; a deck or a demo video is no longer made.
+
 ## 1.101.1 — 2026-11-19
 
 **Upgrade:**

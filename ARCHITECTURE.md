@@ -7,7 +7,7 @@ Design Desk replaces an earlier tool and keeps everything it could do:
 
 | Earlier tool | What it did | Where it lives now |
 | --- | --- | --- |
-| `designer` (starter kit) | decks, clickable mockups, walkthroughs, charts, demo videos, copy | the same skills and the same `design` CLI, ported in [`.agents/skills/`](.agents/skills/) and [`toolkit/`](toolkit/) |
+| `designer` (starter kit) | decks, clickable mockups, walkthroughs, charts, demo videos, copy | mockups, walkthroughs, charts and copy: the same skills and the same `design` CLI, ported in [`.agents/skills/`](.agents/skills/) and [`toolkit/`](toolkit/); decks and demo videos are left out, they are not design work |
 
 What is new:
 
