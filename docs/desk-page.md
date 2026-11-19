@@ -304,13 +304,42 @@ worklist does not need it; what a run does on the Desk is in [desk.md](desk.md).
   on, its jump to the part and Reopen. The order
   stays newest first.
 
+## How it looks today
+
+A request's screen as it is in the product (`now`, [requests.md](requests.md) → How it looks
+today), in a section of its own under what Design Desk found, before the design options:
+
+- It is **open while the request is in Checking** and folded at every later stage; a person's
+  own fold or unfold holds while the page is open. While Design Desk takes it, the section says
+  so; a checked request without one offers **Take how it looks today** to a member.
+- The screen, at full width of its column, with each of the request's parts (`shared_elements`)
+  outlined and numbered on it; beside it the same parts in a list, each cut on its own with
+  what the request needs of it. A part the product does not have yet is **Not in the product
+  today**. Several screens are tabs over the picture.
+- The line under the picture says where it comes from: "The product at main (<commit>), with
+  made-up data" for pictures taken from the product, shown first; "Redrawn from the code by
+  Design Desk" for the drawing, shown only when there are none.
+
+### Compare with today
+
+A switch, **Compare with today**, beside the **Design options** heading while the request has how
+it looks today: it is about every option, not the one shown. Off by default; it holds across
+options and requests while the page is open. On:
+
+- **All elements**: each tile shows the part **Today** beside the option's, an arrow between
+  them; a part the option adds shows **Not in the product today**. Over the tiles, how much of
+  today the option changes: *n changed*, *n new*, *n as today*, *n left out*.
+- **The design**: **◧ Slider** (the default) lays the option and today's drawing on one
+  another, a handle to drag between them; **⇆ Side by side** sets today on the left. With the
+  pictures from the product alone (no drawing), side by side is the only one.
+
 ## The element dialog
 
 A part under **All elements** opens in one dialog, the same in simple and full mode:
 
 - **Before** beside **After**. After is the part as the option draws it. Before is the part as
-  it is in the product: its picture taken from Design Desk's copy of the product, else cut from
-  the request's *how it looks today*; the line under it says which ("The product at main
+  it is in the product: its picture taken from Design Desk's copy of the product, else its box on
+  the screen taken from the product, else cut from the drawing of *how it looks today*; the line under it says which ("The product at main
   (<commit>), with made-up data" or "Redrawn from the code by Design Desk", with when). A part
   with neither says **No picture from before**; a part the option adds shows one picture,
   **New**. Where both come from: [requests.md](requests.md) → The part before, from the product.

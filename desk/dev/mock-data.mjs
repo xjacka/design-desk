@@ -212,7 +212,7 @@ const r1 = {
   waiting: [{ kind: "revise", state: "claimed", created: ago(4), started: ago(3), usual_min: 12, variant: "v2" }],
   prototype: { state: "none" },
   // The parts every option shows, and each as it was before the design (docs/requests.md).
-  shared_elements: [{ id: "change", name: "Change button" }, { id: "bar", name: "Limit bar" }, { id: "text", name: "Limit amount" }, { id: "providers", name: "Provider list" }],
+  shared_elements: [{ id: "change", name: "Change button", how: "Today the loudest thing on the card; the brief wants the card read first." }, { id: "bar", name: "Limit bar", how: "Fills to the agent's own limit only." }, { id: "text", name: "Limit amount", how: "Which counter stops first is small grey text at the bottom." }, { id: "providers", name: "Provider list", how: "" }],
   now: { asset: "A-now", name: "Providers", at: ago(60 * 20), elements: [{ id: "change", selector: "#limit-change", view: null, view_name: null }, { id: "bar", selector: "#limit-bar", view: null, view_name: null }, { id: "text", selector: "#limit-text", view: null, view_name: null }] },
   before_shots: [{ id: "change", asset: "A-before-change", source: "instance", ref: "main", commit: "4286de5", at: ago(60 * 3) }],
 };
@@ -271,5 +271,23 @@ const p3 = pr("P-3", 799, "Empty state for the provider list", 60 * 30, { status
 const p4 = pr("P-4", 790, "Billing: copy fix in the footer", 60 * 48, { attention: { level: "fyi", reasons: ["Nothing differs from the catalog."] } });
 const p5 = pr("P-5", 785, "Table: one more column", 60 * 3, { attention: { level: "developer", reasons: ["A column in an existing table."] } });
 
-export const CARDS = [r1, r2, r3, r4, r5, r6, r7, p1, p2, p3, p4, p5];
+// R-8: still in Checking — Design Desk took how the screen looks today with the check, before any option.
+// The screen as taken from the product (made up here): a picture with the box of each part on it.
+A["A-now-shot"] = { id: "A-now-shot", contentType: "image/svg+xml", encoding: "utf8", data: `<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" font-family="system-ui, sans-serif">
+<rect width="1440" height="900" fill="#f7f7f5"/><rect width="240" height="900" fill="#fff"/><rect x="240" width="1" height="900" fill="#e4e4e0"/>
+<text x="28" y="48" font-size="18" font-weight="700" fill="#16181d">DAM</text>
+${["Home", "Artifacts", "Starter kits", "Release notes", "Build watcher"].map((t, i) => `<text x="28" y="${110 + i * 40}" font-size="15" fill="${i === 3 ? "#16181d" : "#666"}">${t}</text>`).join("")}
+<text x="300" y="80" font-size="30" font-weight="700" fill="#16181d">Providers</text><text x="300" y="112" font-size="15" fill="#666">Choose which of your connected LLM providers this agent can use.</text>
+<rect x="300" y="150" width="1080" height="280" rx="10" fill="#fff" stroke="#e4e4e0"/><text x="330" y="196" font-size="18" font-weight="600" fill="#16181d">Anthropic</text>
+<text x="330" y="250" font-size="15" fill="#666">Daily limit</text><text x="330" y="292" font-size="26" font-weight="700" fill="#16181d">$1.10 <tspan font-size="16" font-weight="400" fill="#666">of $5.00</tspan></text>
+<rect x="1180" y="262" width="170" height="44" rx="6" fill="#16181d"/><text x="1265" y="290" font-size="15" fill="#fff" text-anchor="middle">Change limit</text>
+<rect x="330" y="330" width="1020" height="10" rx="5" fill="#ececea"/><rect x="330" y="330" width="224" height="10" rx="5" fill="#16181d"/>
+<text x="330" y="392" font-size="13" fill="#999">Also counted by the workspace limit · 98% · stops first</text>
+<rect x="300" y="460" width="1080" height="160" rx="10" fill="#fff" stroke="#e4e4e0"/><text x="330" y="506" font-size="18" font-weight="600" fill="#16181d">Bob</text><text x="330" y="560" font-size="15" fill="#666">Daily limit · No limit</text>
+</svg>` };
+const r8 = req("R-8", "Say which limit stops the agent first", "triage", 30, { triage: { verdict: "design", reasons: ["Only the look of the Providers page changes."] },
+  shared_elements: r1.shared_elements,
+  now: { name: "Providers", at: ago(25), shots: [{ asset: "A-now-shot", name: "Providers", ref: "main", commit: "4286de5", width: 1440, height: 900,
+    parts: [{ id: "change", x: 1180, y: 262, w: 170, h: 44 }, { id: "bar", x: 330, y: 330, w: 1020, h: 10 }, { id: "text", x: 330, y: 262, w: 200, h: 40 }] }] } });
+export const CARDS = [r8, r1, r2, r3, r4, r5, r6, r7, p1, p2, p3, p4, p5];
 export const ASSETS = A;

@@ -2907,6 +2907,36 @@ test("a request keeps how its screen looks today, and Draw how it looks today qu
   assert.equal(s.card(card.id).now, null);
 });
 
+test("how it looks today can be pictures taken from the product, with each shared part's box on them", () => {
+  const s = fresh();
+  const { card } = s.createRequest(bob, { title: "Calmer header", problem: "The header shouts." });
+  const page = s.addAsset({ kind: "variant", name: "now", contentType: "text/html", data: "<b>today</b>", encoding: "utf8" }).asset.id;
+  const pic = s.addAsset({ kind: "screen", name: "agents.jpg", contentType: "image/jpeg", data: Buffer.from("jpg").toString("base64") }).asset.id;
+  const shared = [{ id: "card", name: "Agent card" }, { id: "badge", name: "Limit badge" }];
+  const shot = (extra = {}) => ({ asset: pic, name: "Agents", ref: "main", commit: "4286DE5", width: 1440, height: 900, parts: [{ id: "card", x: 100, y: 200, w: 300, h: 80 }], ...extra });
+  // Pictures alone are enough; the drawing is not needed.
+  s.upsertCard({ id: card.id, shared_elements: shared, now: { name: "Agents", shots: [shot()] } });
+  const n = s.card(card.id).now;
+  assert.equal(n.asset, undefined);
+  assert.deepEqual(n.shots, [{ asset: pic, name: "Agents", ref: "main", commit: "4286de5", width: 1440, height: 900, parts: [{ id: "card", x: 100, y: 200, w: 300, h: 80 }] }]);
+  // A drawing sent later keeps the pictures; pictures sent anew replace them; null clears both.
+  s.upsertCard({ id: card.id, now: { asset: page, name: "Agents", elements: [{ id: "card", selector: ".card" }] } });
+  assert.deepEqual([s.card(card.id).now.asset, s.card(card.id).now.shots.length], [page, 1]);
+  s.upsertCard({ id: card.id, now: { asset: page, name: "Agents", shots: [shot({ parts: [] }), shot({ name: "Empty" })] } });
+  assert.deepEqual(s.card(card.id).now.shots.map((x) => x.name), ["Agents", "Empty"]);
+  // A part off the request's list leaves the boxes with it.
+  s.upsertCard({ id: card.id, shared_elements: [{ id: "badge", name: "Limit badge" }, { id: "card2", name: "Card" }] });
+  assert.deepEqual(s.card(card.id).now.shots.map((x) => x.parts.length), [0, 0]);
+  s.upsertCard({ id: card.id, shared_elements: shared, now: null });
+  assert.equal(s.card(card.id).now, null);
+  assert.throws(() => s.upsertCard({ id: card.id, now: { name: "Agents" } }), /drawing|pictures/, "neither a drawing nor pictures");
+  for (const [x, why] of [[{ asset: page }, /picture/], [{ commit: "main" }, /commit/], [{ ref: "" }, /ref/], [{ width: 0 }, /width/], [{ height: 1.5 }, /height/],
+    [{ parts: [{ id: "menu", x: 0, y: 0, w: 10, h: 10 }] }, /shared_elements/], [{ parts: [{ id: "card", x: 0, y: 0, w: 10, h: 10 }, { id: "card", x: 0, y: 0, w: 10, h: 10 }] }, /twice/],
+    [{ parts: [{ id: "card", x: 1400, y: 0, w: 100, h: 10 }] }, /w is/], [{ parts: [{ id: "card", x: 0, y: 0, w: 0, h: 10 }] }, /size/], [{ parts: [{ id: "card", x: -1, y: 0, w: 10, h: 10 }] }, /x is/]])
+    assert.throws(() => s.upsertCard({ id: card.id, now: { shots: [shot(x)] } }), why);
+  assert.throws(() => s.upsertCard({ id: card.id, now: { shots: Array.from({ length: 7 }, () => shot()) } }), /at most 6/);
+});
+
 test("a request keeps where its shared parts sit in how it looks today, and pictures of them from the product", () => {
   const s = fresh();
   const { card } = s.createRequest(bob, { title: "Calmer header", problem: "The header shouts." });

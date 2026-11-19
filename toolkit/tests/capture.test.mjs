@@ -37,6 +37,24 @@ test("a recipe clicks to its state, shoots both themes, and reports where a step
   assert.match(lines.find((l) => l.name === "Elsewhere").error, /leaves the app/);
 });
 
+test("a whole-screen shot with parts prints the picture's size and each part's box on it", async (t) => {
+  const page = `<!doctype html><html><body style="margin:0"><div id="card" style="position:absolute;left:100px;top:200px;width:300px;height:80px;background:#36c"></div><div id="gone" style="display:none"></div></body></html>`;
+  const server = createServer((_, res) => { res.setHeader("content-type", "text/html"); res.end(page); });
+  await new Promise((r) => server.listen(0, "127.0.0.1", r));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const dir = mkdtempSync(join(tmpdir(), "dd-capture-parts-"));
+  writeFileSync(join(dir, "recipe.json"), JSON.stringify({ setup: [{ goto: "/" }], shots: [{ name: "Agents", parts: { card: "#card", gone: "#gone", none: "#nothing" } }] }));
+  let out;
+  try { ({ stdout: out } = await promisify(execFile)(process.execPath, [design, "capture", base, dir, "--recipe", join(dir, "recipe.json")], { timeout: 150000 })); }
+  catch (e) { server.close(); if (/Chromium|browser/i.test(String(e.stderr))) return t.skip("no browser here"); throw e; }
+  server.close();
+  const line = JSON.parse(out.trim().split("\n")[0]);
+  assert.deepEqual([line.width, line.height], [1440, 900]);
+  assert.deepEqual(line.parts, [{ id: "card", x: 100, y: 200, w: 300, h: 80 }]);
+  assert.deepEqual(line.missing, ["gone", "none"]);
+  assert.deepEqual(jpegSize(readFileSync(line.file)), { w: 1440, h: 900 }, "the boxes are in the picture's own pixels");
+});
+
 // The width and height a JPEG says it has (its first start-of-frame marker).
 function jpegSize(buf) {
   for (let i = 2; i < buf.length - 9;) {

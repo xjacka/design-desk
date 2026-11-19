@@ -2451,13 +2451,20 @@ export class Store {
       // The screen as it is in the product today, drawn like an option, to set beside one (docs/requests.md → How it looks today).
       else if (k === "now") {
         if (next.kind !== "request") throw bad("now belongs to a request");
-        if (fields.now !== null && !own(this.db.assets, fields.now?.asset)) throw bad(`now: no asset ${fields.now?.asset}`);
+        // The drawing (an HTML page like an option's), the pictures taken from the product
+        // (`shots`), or both: at least one of them.
+        const n = fields.now, was = next.now;
+        if (n !== null && (typeof n !== "object" || Array.isArray(n))) throw bad("now is an object, or null");
+        if (n && n.asset != null && !own(this.db.assets, n.asset)) throw bad(`now: no asset ${n.asset}`);
         // Where each of the request's shared parts sits in it, so a part's dialog cuts it out as
         // it was before the design: kept while the drawing is the same, gone with a new one.
-        const was = next.now, same = was && fields.now && was.asset === fields.now.asset;
-        const els = fields.now && fields.now.elements !== undefined ? cleanNowElements(fields.now.elements, this.sharedIds(next))
+        const same = was && n && (was.asset || null) === (n.asset || null);
+        const els = n && n.elements !== undefined ? cleanNowElements(n.elements, this.sharedIds(next))
           : same && was.elements?.length ? was.elements : null;
-        next.now = fields.now === null ? null : { asset: fields.now.asset, name: optText(fields.now.name, 80, "now name") || null, at: this.clock(), ...(els?.length ? { elements: els } : {}) };
+        // The screen taken from the product, with where each shared part is on it: kept until sent anew.
+        const shots = n && n.shots !== undefined ? cleanNowShots(n.shots, this.sharedIds(next), this.db.assets) : was?.shots?.length ? was.shots : null;
+        if (n && !n.asset && !shots?.length) throw bad("now needs its drawing (asset), its pictures from the product (shots), or both");
+        next.now = n === null ? null : { ...(n.asset ? { asset: own(this.db.assets, n.asset).id } : {}), name: optText(n.name, 80, "now name") || null, at: this.clock(), ...(els?.length ? { elements: els } : {}), ...(shots?.length ? { shots } : {}) };
       }
       // A shared part as it is in the product, taken on Design Desk's own copy of it: one per part,
       // merged by id; `asset: null` takes one off (docs/requests.md → The part before, from the product).
@@ -2475,6 +2482,7 @@ export class Store {
         // A part off the list takes its place in how it looks today and its picture from the product with it.
         const ids = new Set(next.shared_elements.map((x) => x.id));
         if (next.now?.elements) next.now = { ...next.now, elements: next.now.elements.filter((x) => ids.has(x.id)) };
+        if (next.now?.shots) next.now = { ...next.now, shots: next.now.shots.map((x) => ({ ...x, parts: x.parts.filter((p) => ids.has(p.id)) })) };
         if (next.before_shots) next.before_shots = next.before_shots.filter((x) => ids.has(x.id));
       }
       else if (k === "research") next.research = cleanResearch(fields.research, this.db.assets, this.db);
@@ -3752,6 +3760,36 @@ function cleanNowElements(list, shared) {
     const view = x?.view === undefined || x?.view === null || x?.view === "" ? null : String(x.view);
     if (view !== null && !/^\d{1,4}$/.test(view)) throw bad(`now.elements ${i + 1}: view is a number`);
     return { id, selector: clean(x?.selector, 500, "selector"), view, view_name: optText(x?.view_name, 80, "view_name") || null };
+  });
+}
+
+// The screen a request changes as it is in the product (`now.shots`): each a picture taken on
+// Design Desk's own copy of it, with the box of each shared part on it, in the picture's pixels
+// (docs/requests.md → How it looks today).
+function cleanNowShots(list, shared, assets) {
+  if (list === null) return [];
+  if (!Array.isArray(list) || list.length > 6) throw bad("now.shots is a list of at most 6");
+  const px = (v, max, what) => { if (!Number.isInteger(v) || v < 0 || v > max) throw bad(`${what} is a whole number from 0 to ${max}`); return v; };
+  return list.map((x, i) => {
+    const at = `now.shots ${i + 1}`, a = own(assets, x?.asset);
+    if (!a || !String(a.contentType).startsWith("image/")) throw bad(`${at}: ${x?.asset} is not a picture on the Desk`);
+    const commit = String(x?.commit || "").toLowerCase();
+    if (!/^[0-9a-f]{7,40}$/.test(commit)) throw bad(`${at}: commit is the product's commit, 7 to 40 hex characters`);
+    const width = px(x?.width, 20000, `${at}: width`), height = px(x?.height, 40000, `${at}: height`);
+    if (!width || !height) throw bad(`${at}: width and height are the picture's size in pixels`);
+    const parts = x?.parts == null ? [] : x.parts;
+    if (!Array.isArray(parts) || parts.length > LIMITS.optionElements) throw bad(`${at}: parts is a list of at most ${LIMITS.optionElements}`);
+    const ids = new Set();
+    return { asset: a.id, name: optText(x?.name, 80, `${at} name`) || null, ref: clean(x?.ref, 80, "ref"), commit, width, height,
+      parts: parts.map((p, k) => {
+        const id = String(p?.id || ""), w = `${at}, part ${k + 1}`;
+        if (!shared.has(id)) throw bad(`${w}: ${id || "its id"} is not one of the request's shared_elements`);
+        if (ids.has(id)) throw bad(`${w}: ${id} is there twice`);
+        ids.add(id);
+        const bx = px(p?.x, width, `${w}: x`), by = px(p?.y, height, `${w}: y`), bw = px(p?.w, width - bx, `${w}: w`), bh = px(p?.h, height - by, `${w}: h`);
+        if (!bw || !bh) throw bad(`${w}: w and h are the part's size on the picture`);
+        return { id, x: bx, y: by, w: bw, h: bh };
+      }) };
   });
 }
 

@@ -2111,6 +2111,58 @@ test("an element's dialog shows the part before and after, says where before cam
   }
 });
 
+// How it looks today: its own section, open while the request is checked, and Compare with today
+// on the option (docs/desk-page.md → How it looks today).
+const NOW_SHOTS = `now: { name: "Agents", at, shots: [{ asset: "A-shot", name: "Agents", ref: "main", commit: "4286de5", width: 1440, height: 900,
+    parts: [{ id: "card", x: 100, y: 200, w: 300, h: 80 }, { id: "label", x: 100, y: 300, w: 200, h: 20 }] }] },`;
+test("how it looks today is a section of its own, open while the request is checked, its parts numbered on the product's picture", async (t) => {
+  const bridge = bridgeBefore().replace('status: "feedback"', 'status: "triage"').replace(/now: \{ asset: "A-now"[^\n]*\n/, `${NOW_SHOTS}\n`).replace(/before_shots: [^\n]*\n/, "").replace(/variants: \[\{ id: "v1"[\s\S]*?\] \}\],\n/, "variants: [],\n");
+  const run = await launch(t, bridge);
+  if (!run) return;
+  const { desk } = run;
+  try {
+    await desk.click('[data-card="r7"]');
+    await desk.waitForSelector('#detail details[data-sect="today"][open] .today-shot svg image[href]');
+    const today = await desk.textContent('#detail [data-sect="today"]');
+    assert.match(today, /How it looks today · Agents[\s\S]*The product at main \(4286de5\), with made-up data/);
+    assert.match(today, /1\s*Agent card[\s\S]*2\s*Limit label[\s\S]*3\s*Not in the product today\s*Added note/);
+    assert.equal(await desk.locator('#detail [data-sect="today"] .today-shot svg rect').count(), 2, "each part the product has is outlined");
+    assert.deepEqual(await desk.$$eval('#detail .today-parts .tp svg', (xs) => xs.map((x) => x.getAttribute("viewBox"))), ["92 192 316 96", "92 292 216 36"], "each part is cut from the picture, 8 px round it");
+    assert.equal(await desk.locator("[data-cmp-mode]").count(), 0, "no switch before there is an option");
+  } finally {
+    await run.close();
+  }
+});
+
+test("Compare with today sets each part and the whole screen beside how it looks today", async (t) => {
+  const run = await launch(t, bridgeBefore());
+  if (!run) return;
+  const { desk } = run;
+  try {
+    await desk.click('[data-card="r7"]');
+    await desk.waitForSelector("#detail .eltile");
+    assert.equal(await desk.locator('#detail details[data-sect="today"][open]').count(), 0, "folded past Checking");
+    assert.equal(await desk.locator("#detail .elpic.ba").count(), 0, "off by default: the option alone");
+    assert.equal(await desk.getAttribute("[data-cmp-mode]", "aria-checked"), "false");
+    await desk.click("[data-cmp-mode]");
+    await desk.waitForSelector("#detail .elpic.ba");
+    assert.match(await desk.textContent('#detail [data-sect="elements"]'), /2 changed[\s\S]*1 new[\s\S]*Today[\s\S]*Calm/);
+    assert.equal(await desk.locator('#detail .eltile .bap img[data-asset="A-shot"]').count(), 1, "a part's own picture from the product");
+    assert.equal(await desk.locator('#detail .eltile .bap iframe[data-snip-asset="A-now"][data-snip-sel="#label"]').count(), 1, "else cut from the drawing");
+    assert.match(await desk.textContent("#detail .eltile:nth-child(3) .bap.none"), /Not in the product today/);
+    // The whole screen: the slider first, side by side on a press; off again gives the option alone.
+    assert.equal(await desk.locator('#detail [data-slider] iframe[data-pane-asset="A-now"]').count(), 1);
+    await desk.click('[data-cmp-view="side"]');
+    await desk.waitForSelector('#detail .split iframe[data-pane-asset="A-now"]');
+    assert.equal(await desk.locator("#detail .split #variant-frame").count(), 1);
+    await desk.click("[data-cmp-mode]");
+    await desk.waitForSelector("#detail #variant-frame:not(.split #variant-frame)");
+    assert.equal(await desk.locator("#detail .elpic.ba, #detail [data-slider], #detail .split").count(), 0);
+  } finally {
+    await run.close();
+  }
+});
+
 test("an element's dialog lists the part's open comments and comments on the part", async (t) => {
   const run = await launch(t, bridgeBefore());
   if (!run) return;
