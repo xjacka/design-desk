@@ -44,8 +44,8 @@ Environments.
 1. **The shot list.** From the pull request, its issue and the code, write what a person
    must see to understand the change: each screen and the state it needs, in the product's
    words, with the path it opens at (`profile.capture.routes` names the main ones).
-   Example: "Agents list, one agent near its limit — create two agents; give one a weekly
-   limit of $5 and spend $4.60; /agents". It goes on the card as `shotlist`, so a person can
+   Example: "Invoices list, one customer near its credit limit — create two customers; give
+   one a credit limit of $5,000 and open invoices of $4,600; /invoices". It goes on the card as `shotlist`, so a person can
    take the same pictures.
 2. **The recipe.** Turn the list into a capture recipe ([`design capture`](../toolkit/bin/capture.mjs)):
    `setup` signs in and makes the data every shot shares; each shot's `steps` reach its

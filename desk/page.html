@@ -1662,7 +1662,7 @@
     <input type="hidden" name="audience" value="designers" />
     <label><span id="rq-problem-label">What would you change, and for whom?</span><textarea name="problem" maxlength="4000" required></textarea></label>
     <label id="rq-vision"><span>How do you picture it? (optional)</span><textarea name="vision" maxlength="4000" placeholder="e.g. calmer, like the cards in Settings; the main button on the right; less text"></textarea></label>
-    <label><span>Which screen? (optional)</span><input name="screen" maxlength="500" placeholder="e.g. the agents list" /></label>
+    <label><span>Which screen? (optional)</span><input name="screen" maxlength="500" placeholder="e.g. the invoices list" /></label>
     <div id="rq-carry" hidden><span class="hint" style="margin:0">Carry over</span><div class="choices" id="rq-carry-list"></div></div>
     <div class="count-pick" id="rq-count"><span class="hint" style="margin:0" id="rq-count-q">How many design options should Design Desk draw?</span>
       <div class="row2"><input type="range" name="options" min="0" max="5" step="1" value="3" aria-label="How many design options to draw" /><output id="rq-count-say">3 options</output></div>
@@ -8508,7 +8508,7 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
       part: ["Which screen? Name it the way people know it.", "e.g. Billing settings"], where: ["How do you get there, or its address? (optional)", "e.g. Settings → Billing, or /settings/billing"],
       show: ["What should the pictures show? (optional)", "e.g. with one unpaid invoice"] },
     element: { hint: "Design Desk finds the real part in the product's code and draws it in every situation it can be in: each state, empty and full, errors, long text.",
-      part: ["Which part? Name it and say where you see it.", "e.g. the agent row in the agents list"], where: ["Which screen is it on? (optional)", "e.g. Agents"],
+      part: ["Which part? Name it and say where you see it.", "e.g. the invoice row in the invoices list"], where: ["Which screen is it on? (optional)", "e.g. Invoices"],
       show: ["Which situations matter to you? (optional)", "e.g. empty, an error, a very long name"] },
   };
   function setKind(kind) {

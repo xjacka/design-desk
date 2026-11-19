@@ -2,7 +2,7 @@
 // Screens of a running app: signs in once with the demo account the profile's engine
 // prints (passed as DESK_DEMO_USER / DESK_DEMO_PASSWORD), then writes one JPEG per screen,
 // small enough for the Desk. Prints one JSON line per screen.
-//   routes.json  {"Agents list": "/agents", …}: visit each and shoot.
+//   routes.json  {"Invoices list": "/invoices", …}: visit each and shoot.
 //   recipe.json  {"setup": [step…], "shots": [{"name", "steps": [step…], "themes": ["light", "dark"]}]}:
 //                the steps bring the app into the state a shot shows. A step is one of
 //                {"goto": "/path"}, {"click": "<selector>"}, {"fill": ["<selector>", "text"]},
