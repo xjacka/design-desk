@@ -10,39 +10,49 @@ authoring rules: [docs/self-modification.md](docs/self-modification.md) §12.
 ## 1.103.0 — 2026-11-19
 
 **Upgrade:**
-1. Restart the Desk server ([desk.md](docs/desk.md) → Server): the store takes `now.shots`,
-   pictures of a request's screen taken from the product with each shared part's box, and a
-   `now` with pictures alone ([requests.md](docs/requests.md) → How it looks today). Then
-   republish the page ([desk.md](docs/desk.md) → Publishing the page): a request shows how it
-   looks today in a section of its own, and **Compare with today** sets each part and the whole
-   screen beside it ([desk-page.md](docs/desk-page.md) → How it looks today). No data migration.
-2. Nothing else to do: from the next triage, Design Desk takes how a request's screen looks
-   today; requests triaged before keep what they have.
-
-## 1.102.0 — 2026-11-19
-
-**Upgrade:**
-1. Restart the Desk server ([desk.md](docs/desk.md) → Server) and republish the page
-   ([desk.md](docs/desk.md) → Publishing the page): people keep draft comments and send them as
-   one review with a verdict ([desk.md](docs/desk.md) → Reviews). The store starts `drafts` and
-   `reviews` empty; no data migration.
+1. Restart the Desk server ([desk.md](docs/desk.md) → Server), then republish the page
+   ([desk.md](docs/desk.md) → Publishing the page). The store takes:
+   - `now.elements`, `before_shots` and the `take-before` action, with a member's new `before`
+     ability: an element's dialog shows the part before and after, takes it from the product,
+     opens the design workspace at it, and comments on it ([requests.md](docs/requests.md) → The
+     part before, from the product);
+   - `now.shots`, pictures of a request's screen taken from the product with each shared part's
+     box, and a `now` with pictures alone: a request shows how it looks today in a section of its
+     own, and **Compare with today** sets each part and the whole screen beside it
+     ([desk-page.md](docs/desk-page.md) → How it looks today);
+   - `drafts` and `reviews`, both starting empty: people keep draft comments and send them as one
+     review with a verdict ([desk.md](docs/desk.md) → Reviews).
 2. Offer the operator `review_post` (default `disabled`): `enabled` posts a person's Desk review
    of a pull request's change on that pull request, as a comment, with their name, from the
    agent's account ([watch.md](docs/watch.md) → Reviews on GitHub). The step is the offer, never
    the enabling.
-3. Nothing else to do: the next watch run's GitHub read records each pull request's head commit.
+3. Nothing to migrate. From the next triage, Design Desk takes how a request's screen looks
+   today; a request triaged before keeps what it has, and its parts say there is no picture from
+   before until it is taken again. The next watch run's GitHub read records each pull request's
+   head commit.
 
-## 1.101.0 — 2026-11-18
+## 1.102.0 — 2026-11-19
 
 **Upgrade:**
-1. Restart the Desk server ([desk.md](docs/desk.md) → Server): the store takes `now.elements` and
-   `before_shots` on a request and the `take-before` action, and a member's new `before` ability
-   ([requests.md](docs/requests.md) → The part before, from the product). Then republish the page
-   ([desk.md](docs/desk.md) → Publishing the page): an element's dialog shows the part before and
-   after, takes it from the product, opens the design workspace at it, and comments on it.
-2. Nothing to migrate: a request drawn before has no places in its *how it looks today* and no
-   pictures from the product, so its parts say there is no picture from before until it is drawn
-   again or a member presses **Take it from the product**.
+1. Re-run `bash "$HOME/scripts/install-toolkit.sh"`: the toolkit drops `ffmpeg-static` and
+   `@babel/standalone`. The `slides` and `demo-video` skills and the `design deck-*`, `video`,
+   `video-new` and `stills` commands are gone; a deck or a demo video is no longer made.
+
+## 1.101.1 — 2026-11-19
+
+**Upgrade:**
+1. Republish the page ([desk.md](docs/desk.md) → Publishing the page): the New request and Add to
+   Product hints name a neutral example product instead of one product's screens. No data migration.
+
+## 1.101.0 — 2026-11-19
+
+**Upgrade:**
+1. Rename the onboarding sentinel, so onboarding does not run again:
+   `[ -f "$HOME/.design-desk-onboarded" ] && mv "$HOME/.design-desk-onboarded" "$HOME/.xjacka-design-desk-onboarded"`.
+2. The kit id is `xjacka-design-desk`, and every schedule name carries it: `xjacka-design-desk-watch-hourly`,
+   `-inbox-10m`, `-monitor-15m`, `-digest-weekly`, `-issues-daily`, `-audit-weekly`. Reconcile the schedules
+   as [ONBOARDING.md](ONBOARDING.md) → 5b does: create each new name that is absent, then
+   `delete_schedule` each old `design-desk-*` one of the same job, so no job runs twice.
 
 ## 1.100.0 — 2026-11-18
 

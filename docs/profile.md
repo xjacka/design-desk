@@ -40,8 +40,8 @@ read from) and `source` (`repo`, `saved` or `default`).
     "architecture": ["docs/architecture/"],
     "decisions": ["the hidden author-decisions block of a PR body"]
   },
-  "screens": { "Agents list": "web/src/modules/agents/views/agents-view.tsx" },
-  "capture": { "base_url": "", "routes": { "Agents list": "/agents" },
+  "screens": { "Invoices list": "web/src/invoices/invoices-list.tsx" },
+  "capture": { "base_url": "", "routes": { "Invoices list": "/invoices" },
                "login": { "path": "/", "user_field": "#username", "password_field": "#password", "submit": "button[type=submit]" } },
   "engine": { "endpoints": [{ "name": "app", "port": 4444 }], "open_endpoint": "app", "storage": "40Gi" },
   "handoff": { "labels": ["design"] },
@@ -72,7 +72,7 @@ read from) and `source` (`repo`, `saved` or `default`).
 - `skills` — the product's own skills by action, each `{skill, source}`: the skill's name and
   the repository it comes from, installed only as the operator confirms ([actions.md](actions.md) →
   Another skill for an action), for example
-  `"options": {"skill": "dam-prototyper", "source": "dam-agents/dam-prototyper"}`.
+  `"options": {"skill": "acme-prototyper", "source": "acme/acme-prototyper"}`.
 - `figma` — `{library}`: the link of the product's Figma library, for linking its components
   to code (the `figma` skill).
 

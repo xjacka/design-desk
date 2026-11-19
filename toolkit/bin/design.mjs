@@ -5,7 +5,7 @@
 const [cmd, ...args] = process.argv.slice(2);
 const USAGE = `usage: design <command> [args]
 
-  doctor                               check the toolchain (browser, ffmpeg, fonts, npm)
+  doctor                               check the toolchain (browser, fonts, npm)
   repo clone <owner/name> [ref]        fresh clone into scratch; prints {dir, commit}
   repo detect <owner/name> [ref]       clone + propose a design profile (not saved)
   repo save <profile.yaml>             save a confirmed profile to work/profiles/
@@ -38,16 +38,6 @@ const USAGE = `usage: design <command> [args]
   figma <command>                      read a design from Figma's REST API (run \`design figma\` for its commands)
   config sha | write <file> --from <sha>
                                        change work/CONFIG.md under its lock, only when unchanged since read
-  deck-new <deck.html> [--style brand|carbon]
-                                       start a deck from the template, in the style's colors and fonts
-  deck-pdf <deck.html> <out.pdf>       print a deck to PDF, one page per slide
-  deck-check <deck.html>               the deck skill's mechanical checks
-  video <page.html[?shot=Name]> <out.mp4> [fps] [music]
-                                       render a demo video to MP4
-  stills <page.html> <shot|""> <t1,t2,...> <outdir>
-                                       PNG stills of a video at given times
-  video-new <dir> [--style brand|carbon]
-                                       start a video in <dir>: template + vendor/ (React, Babel, fonts)
   brand extract <file>... [--name <n>] read logo/screenshot/pptx/pdf/css into a draft brand
   brand show                           print the saved brand
   brand save <brand.json>              save a confirmed brand to work/brand/
@@ -56,8 +46,7 @@ const USAGE = `usage: design <command> [args]
 const table = {
   doctor: "./doctor.mjs", repo: "./repo.mjs", profile: "./profile.mjs", build: "./build.mjs", shot: "./shot.mjs",
   capture: "./capture.mjs", "pr-shots": "./pr-shots.mjs", guard: "./guard.mjs", desk: "./desk.mjs", config: "./config.mjs", states: "./states.mjs",
-  "deck-new": "./deck.mjs", "deck-pdf": "./deck.mjs", "deck-check": "./deck.mjs", video: "./video.mjs", stills: "./video.mjs",
-  "video-new": "./video.mjs", brand: "./brand.mjs", icons: "../lib/icons.mjs", skill: "./skill.mjs", where: "./where.mjs", diff: "./diff.mjs", compare: "./compare.mjs", figma: "./figma.mjs", kit: "./kit.mjs",
+  brand: "./brand.mjs", icons: "../lib/icons.mjs", skill: "./skill.mjs", where: "./where.mjs", diff: "./diff.mjs", compare: "./compare.mjs", figma: "./figma.mjs", kit: "./kit.mjs",
 };
 if (!cmd || !table[cmd]) { process.stdout.write(USAGE); process.exit(cmd ? 2 : 0); }
 const mod = await import(table[cmd]);

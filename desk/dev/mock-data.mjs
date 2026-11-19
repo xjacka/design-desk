@@ -1,7 +1,7 @@
 // Development only: made-up requests that put the design workspace in every state it can
 // show — options, pages, states, alternatives, versions, decisions, smart controls, notes in
-// each state, and Design Desk at work on one option. The designs are screens of DAM, the
-// agent app this tool serves. Read by desk/dev/mock.mjs.
+// each state, and Design Desk at work on one option. The designs are screens of a
+// made-up product, Acme. Read by desk/dev/mock.mjs.
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -22,7 +22,7 @@ const I = {
 const ic = (k, cls = "i") => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${I[k]}</svg>`;
 const face = (c = "#d4573b") => `<svg class="face" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11a8 8 0 0 1 16 0" fill="none" stroke="${c}" stroke-width="2.4" stroke-linecap="round"/><path d="M5 15a8 8 0 0 0 14 0" fill="none" stroke="${c}" stroke-width="2.4" stroke-linecap="round"/><circle cx="9.5" cy="11" r="1.7" fill="${c}"/><circle cx="14.5" cy="11" r="1.7" fill="${c}"/></svg>`;
 
-// One drawn option of DAM's agent settings: three pages (Providers, Usage, General), the agent's
+// One drawn option of Acme's agent settings: three pages (Providers, Usage, General), the agent's
 // menu, an empty state, design notes. `limit` is how the daily limit is drawn.
 function design({ title, ink = "#16181d", accent = "#16181d", radius = 8, dense = false, big = false, change = "btn-secondary", limit = "bar", state = "" }) {
   const pad = dense ? 14 : 22;
@@ -46,7 +46,7 @@ function design({ title, ink = "#16181d", accent = "#16181d", radius = 8, dense 
   const nav = (cur) => [["3", "General", "claude-code · claude-sonnet-5"], ["", "People", "Just you"], ["1", "Providers", "2 providers"], ["", "Connections", "1 connection"], ["", "Skills", "4 enabled"], ["", "Schedules", "2 enabled"], ["2", "Usage", "$30.30 today"]]
     .map(([v, n, s]) => `<button class="sn${n === cur ? " on" : ""}"${v ? ` data-goto-view="${v}"` : ""}><b>${n}</b><span>${s}</span></button>`).join("");
   const page = (view, name, cur, body) => `<div data-view="${view}" data-view-name="${name}" class="app">
-    <aside class="side"><div class="brand">DAM <span class="grow"></span>${ic("back")}</div>
+    <aside class="side"><div class="brand">Acme <span class="grow"></span>${ic("back")}</div>
       <a>${ic("home")}Home</a><a>${ic("folder")}Artifacts</a><a>${ic("gift")}Starter kits</a>
       <div class="sh">AGENTS <span class="grow"></span>${ic("plus")}</div>
       <a class="on">${face()}Release notes</a><a class="subl">Today</a><a class="subl">A week of signups</a>
@@ -54,7 +54,7 @@ function design({ title, ink = "#16181d", accent = "#16181d", radius = 8, dense 
       <span class="grow"></span><a>${ic("doc")}Documentation</a><a>${ic("gear")}Settings</a></aside>
     <nav class="settings"><button id="agent-menu" class="agent" data-menu-trigger="amenu" data-menu-align="start">${face()}<b>Release notes</b>${ic("chev")}</button>${nav(cur)}</nav>
     <main class="content">${body}</main></div>`;
-  return `<!doctype html><html data-review-title="${title}" data-review-style="Style: acme/dam@4f2a9c1"><head><meta charset="utf-8"><title>${title}</title>
+  return `<!doctype html><html data-review-title="${title}" data-review-style="Style: acme/app@4f2a9c1"><head><meta charset="utf-8"><title>${title}</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"><style>
   :root { --ink: ${ink}; --accent: ${accent}; --muted: #646a78; --line: #e2e4ea; --soft: #f1f2f5; --bg: #ffffff; --warn: #c2620b; --bad: #da1e28; --ok: #24a148; --radius: ${radius}px; }
   .dark { --ink: #eceef2; --accent: #eceef2; --muted: #9298a6; --line: #2a2e36; --soft: #1a1d23; --bg: #111317; }

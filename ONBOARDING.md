@@ -18,8 +18,8 @@ its own — backup runs from a disposable tmpfs clone
 ## Guard — skip if already onboarded
 
 ```bash
-if [ -f "$HOME/.design-desk-onboarded" ]; then
-  echo "Already onboarded ($(cat "$HOME/.design-desk-onboarded")); skipping onboarding."
+if [ -f "$HOME/.xjacka-design-desk-onboarded" ]; then
+  echo "Already onboarded ($(cat "$HOME/.xjacka-design-desk-onboarded")); skipping onboarding."
   exit 0
 fi
 ```
@@ -338,7 +338,7 @@ re-registered with them here.
 A registered schedule this step does not define → report it; never delete it on your own.
 Never use an in-process cron.
 
-**`design-desk-watch-hourly`** — cron `7 * * * *`, `sessionMode: fresh`, precheck
+**`xjacka-design-desk-watch-hourly`** — cron `7 * * * *`, `sessionMode: fresh`, precheck
 `bash "$HOME/scripts/precheck.sh" watch`, sessionTitle `Explain merged changes`. Task:
 
 > Watch run. The precheck already ran the pre-flight and found work: read the worklist
@@ -349,7 +349,7 @@ Never use an in-process cron.
 > work/ at the end with `bash "$HOME/scripts/work-backup.sh" persist` when
 > GITHUB_REPO_WORK or work_repo is set.
 
-**`design-desk-inbox-10m`** — cron `*/10 * * * *`, `sessionMode: fresh`, precheck
+**`xjacka-design-desk-inbox-10m`** — cron `*/10 * * * *`, `sessionMode: fresh`, precheck
 `bash "$HOME/scripts/precheck.sh" inbox`, sessionTitle `Work the Desk`. Task:
 
 > Inbox run. The precheck already ran the pre-flight and found work: read the worklist
@@ -360,7 +360,7 @@ Never use an in-process cron.
 > back up work/ at the end with `bash "$HOME/scripts/work-backup.sh" persist` when
 > GITHUB_REPO_WORK or work_repo is set.
 
-**`design-desk-monitor-15m`** — cron `*/15 * * * *`, `sessionMode: fresh`, precheck
+**`xjacka-design-desk-monitor-15m`** — cron `*/15 * * * *`, `sessionMode: fresh`, precheck
 `bash "$HOME/scripts/precheck.sh" monitor`, sessionTitle `Check agent health`. Task:
 
 > Agent monitor. The precheck already ran scripts/monitor.sh and found alerts due: read
@@ -372,7 +372,7 @@ Never use an in-process cron.
 > anything in response, and back up work/ with `bash "$HOME/scripts/work-backup.sh"
 > persist` when GITHUB_REPO_WORK or work_repo is set.
 
-**`design-desk-digest-weekly`** — cron `0 8 * * 4`, `sessionMode: fresh`, precheck
+**`xjacka-design-desk-digest-weekly`** — cron `0 8 * * 4`, `sessionMode: fresh`, precheck
 `bash "$HOME/scripts/precheck.sh" digest`, sessionTitle `Write the weekly digest`. Task:
 
 > Weekly digest. The precheck already ran the pre-flight and found a week to report: read
@@ -383,7 +383,7 @@ Never use an in-process cron.
 > slack, and back up work/ with `bash "$HOME/scripts/work-backup.sh" persist` when
 > GITHUB_REPO_WORK or work_repo is set.
 
-**`design-desk-issues-daily`** — cron `20 5 * * *`, `sessionMode: fresh`, precheck
+**`xjacka-design-desk-issues-daily`** — cron `20 5 * * *`, `sessionMode: fresh`, precheck
 `bash "$HOME/scripts/precheck.sh" issues`, sessionTitle `Read the planned issues`. Task:
 
 > Issues run. The precheck already ran the pre-flight and found work: read the worklist
@@ -394,7 +394,7 @@ Never use an in-process cron.
 > screens, and back up work/ at the end with `bash "$HOME/scripts/work-backup.sh"
 > persist` when GITHUB_REPO_WORK or work_repo is set.
 
-**`design-desk-audit-weekly`** — cron `0 7 * * 5`, `sessionMode: fresh`, no precheck,
+**`xjacka-design-desk-audit-weekly`** — cron `0 7 * * 5`, `sessionMode: fresh`, no precheck,
 sessionTitle `Audit design-desk`. Task:
 
 > Weekly audit. Run `bash "$HOME/scripts/preflight.sh" audit` first — this run is
@@ -408,7 +408,7 @@ Only after all previous steps succeeded:
 
 ```bash
 head -1 "$HOME/VERSION" > "$HOME/work/VERSION"
-date -u +%Y-%m-%dT%H:%M:%SZ > "$HOME/.design-desk-onboarded"
+date -u +%Y-%m-%dT%H:%M:%SZ > "$HOME/.xjacka-design-desk-onboarded"
 ```
 
 The sentinel goes first so a failed verification does not re-run the whole runbook. Before
@@ -434,8 +434,8 @@ Give the operator a short **summary**:
    - New UI changes appear on the Desk within the hour, under **Changes**.
    - Anyone on the list asks questions on a card; designers file **New request**, and each
      request shows what happens next and whose turn it is.
-   - In the chat: "mock up the empty state of …", "a deck from this doc", "what changed in
-     the agents list this month?" — the Designer kit's deliverables are all here.
+   - In the chat: "mock up the empty state of …", "a walkthrough of this flow", "what changed in
+     the invoices list this month?" — mockups, walkthroughs, charts and copy.
    - To change who may do what, or any setting, say so in this chat.
 4. A **welcome note** the owner can paste to the team (in Slack or an email), filled in with
    the Desk's share link and the product's name:

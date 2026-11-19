@@ -4,7 +4,7 @@
 # same commit. Every schedule's task text is copied verbatim from ONBOARDING.md, the
 # source of truth.
 schemaVersion: v1
-id: design-desk
+id: xjacka-design-desk
 name: Design Desk
 tagline: A design partner that explains what shipped and prototypes what's next.
 description: >-
@@ -20,8 +20,7 @@ description: >-
   before/after picture. An approved direction becomes a live
   prototype — the real product with only its look changed, checked by a design-only
   guard, running on its own Environment with demo data — and then a developer spec.
-  Also makes everything the Designer kit did: decks, mockups, walkthroughs, charts,
-  demo videos and copy. Optionally lists the planned issues that change the screens,
+  Also makes mockups, walkthroughs, charts and copy on request. Optionally lists the planned issues that change the screens,
   each with what the UI will need, how it looks now and a sketch, and publishes the
   team's design decisions as a public text page for coding agents, and can hold an
   open pull request's check on GitHub until a designer has seen its new UI. Runs an hourly watch,
@@ -32,7 +31,7 @@ description: >-
 category: productivity
 icon: paint-brush
 avatar: spark
-docsUrl: https://github.com/dam-agents/design-desk#readme
+docsUrl: https://github.com/xjacka/design-desk#readme
 harnesses: [claude-code]
 
 # `self` is this repository, at the commit the kit was resolved at. Into $HOME, so
@@ -90,7 +89,7 @@ resources:
   storage: 60Gi
   note: >-
     A clone of each watched repository with its UI toolchain, prototype worktrees,
-    the images a live prototype builds, screenshots and video frames.
+    the images a live prototype builds, and screenshots.
 
 # npm, PyPI and GitHub are on the trusted list. A live prototype of a product runs in
 # an Environment whose egress follows this agent's rules; the product's profile names
@@ -101,7 +100,7 @@ bundledSkills:
   path: .agents/skills
 
 schedules:
-  - name: design-desk-watch-hourly
+  - name: xjacka-design-desk-watch-hourly
     cron: "7 * * * *"
     description: Turns every UI change merged in the last hour into a Desk card with screens and a plain-language explanation.
     sessionMode: fresh
@@ -114,7 +113,7 @@ schedules:
       run": read exactly the worklist's read_set, dispatch every change after the
       first, make one Desk card per change, and back up work/ at the end with `bash
       "$HOME/scripts/work-backup.sh" persist` when GITHUB_REPO_WORK or work_repo is set.
-  - name: design-desk-inbox-10m
+  - name: xjacka-design-desk-inbox-10m
     cron: "*/10 * * * *"
     description: Works what people left on the Desk — questions, design requests, variants, prototypes, specs.
     sessionMode: fresh
@@ -128,7 +127,7 @@ schedules:
       dispatch the expensive ones after the first, and back up work/ at the end with
       `bash "$HOME/scripts/work-backup.sh" persist` when GITHUB_REPO_WORK or work_repo
       is set.
-  - name: design-desk-monitor-15m
+  - name: xjacka-design-desk-monitor-15m
     cron: "*/15 * * * *"
     description: Checks the agent's own health from local files and reports an outage once; silent when healthy.
     sessionMode: fresh
@@ -143,7 +142,7 @@ schedules:
       the send, never repair or re-run anything in response, and back up work/ with
       `bash "$HOME/scripts/work-backup.sh" persist` when GITHUB_REPO_WORK or work_repo
       is set.
-  - name: design-desk-digest-weekly
+  - name: xjacka-design-desk-digest-weekly
     cron: "0 8 * * 4"
     description: A weekly page of what happened to the product's UX, with the themes in people's feedback.
     sessionMode: fresh
@@ -156,7 +155,7 @@ schedules:
       read docs/digest.md, write the week's digest card with the themes in people's
       feedback, post it to Slack when digest is slack, and back up work/ with `bash
       "$HOME/scripts/work-backup.sh" persist` when GITHUB_REPO_WORK or work_repo is set.
-  - name: design-desk-issues-daily
+  - name: xjacka-design-desk-issues-daily
     cron: "20 5 * * *"
     description: Lists the planned issues that change the screens, with what the UI will need and a sketch.
     sessionMode: fresh
@@ -169,7 +168,7 @@ schedules:
       read_set, dispatch every drawing after the first, keep one Desk card per issue that
       changes the screens, and back up work/ at the end with `bash
       "$HOME/scripts/work-backup.sh" persist` when GITHUB_REPO_WORK or work_repo is set.
-  - name: design-desk-audit-weekly
+  - name: xjacka-design-desk-audit-weekly
     cron: "0 7 * * 5"
     description: A weekly self-check of the watch, the Desk, the prototypes and the toolchain, reported in the chat.
     sessionMode: fresh

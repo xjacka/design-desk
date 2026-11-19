@@ -3,12 +3,11 @@
 This page is for people who maintain or evaluate the agent.
 The agent itself never loads it: its operating manual is [`CLAUDE.md`](CLAUDE.md), and its procedures live in [`docs/`](docs/).
 
-Design Desk replaces two earlier tools and keeps everything they could do:
+Design Desk replaces an earlier tool and keeps everything it could do:
 
 | Earlier tool | What it did | Where it lives now |
 | --- | --- | --- |
-| `designer` (starter kit) | decks, clickable mockups, walkthroughs, charts, demo videos, copy | the same skills and the same `design` CLI, ported in [`.agents/skills/`](.agents/skills/) and [`toolkit/`](toolkit/) |
-| `dam-prototyper` (skill) | 2–3 design approaches for an issue, built into the real screens | the `variants` skill, plus a product profile in the target repository instead of hard-coded paths |
+| `designer` (starter kit) | decks, clickable mockups, walkthroughs, charts, demo videos, copy | mockups, walkthroughs, charts and copy: the same skills and the same `design` CLI, ported in [`.agents/skills/`](.agents/skills/) and [`toolkit/`](toolkit/); decks and demo videos are left out, they are not design work |
 
 What is new:
 
@@ -31,7 +30,7 @@ What is new:
 | The Desk server is a Login item (`startupItems`) on the Artifact API port | The platform relays page requests to a loopback server in the agent's machine, names the caller (`owner` or `viewer`, and the verified email), and wakes the machine for it; the agent must keep the server running itself. |
 | Roles come from the operator's roster in `work/CONFIG.md`, matched by the platform-verified email | The page cannot forge the caller headers, so the email is real identity. Unknown viewers are guests: they read and comment, they cannot start expensive work. |
 | Viewer prompts are wake-up pings that carry an item id only, each in its conversation's own session | A viewer can send any text to the agent. The agent reads the work from its own store, and handles only the closed set of Desk actions. The page names the conversation (a thread, else the card) to `sendPrompt`'s `conversation` option, so one person's conversations do not pile up in one platform session; a platform without the option keeps them in one. |
-| Live prototypes run in **platform Environments**, one per request | An Environment is a sandbox the agent owns, with its own addresses, an access list, an expiry, and no credentials. DAM can install itself into one from a checkout, and rebuilds only the images that changed — for a design change, only the UI. |
+| Live prototypes run in **platform Environments**, one per request | An Environment is a sandbox the agent owns, with its own addresses, an access list, an expiry, and no credentials. The product's profile installs it into one from a checkout (`bin/env`), and rebuilds only the images that changed — for a design change, only the UI. |
 | The agent keeps its **own install of the product** for screenshots (`screens`), like a developer agent's install per issue | A pull request without pictures still gets real screens; people open the same install from the card, try the change with a demo account, and add their own pictures; a recipe of steps brings it into the state a screen needs. |
 | Variants are static HTML on mock data | Fast, cheap, safe to throw away; the `designer` build pipeline already compiles the product's real styles, so a variant looks like the product. |
 | The design-only guard is a script, not a prompt rule | "Never change logic" is the rule non-technical requesters rely on. A rule whose violation still produces output is enforced, not narrated: path allow/deny lists from the profile, and a logic fingerprint of every changed component (imports, hooks, handlers, conditions) that must not change. |
@@ -97,7 +96,7 @@ Clones and prototype worktrees live in `$HOME/checkouts/`, outside `work/`, and 
 
 These parts are written against the platform's documented contracts but were not run end to end before the first commit:
 
-- The live prototype engine (`.design-desk/dam/bin/env` in the DAM repository): an Environment install of DAM from a prototype worktree with the backchannel on, the demo account, the UI-only rebuild, and the `tunnel` verb that gives the agent's own browser a local address for screenshots.
+- The live prototype engine (`.design-desk/<profile>/bin/env` in the product's repository): an Environment install of the product from a prototype worktree with the backchannel on, the demo account, the UI-only rebuild, and the `tunnel` verb that gives the agent's own browser a local address for screenshots.
 - `design capture` against a running install (it signs in through the form the profile's `capture.login` names; the screenshot code itself is the Designer kit's, which is proven).
 - The Desk page against the real Artifact API relay (the server and the store have offline tests).
 
@@ -119,7 +118,7 @@ The first onboarding runs `scripts/verify-onboarding.sh --live`, which probes ea
 
 ## Not built yet, on purpose
 
-- **Demo data** in a prototype beyond its demo account: DAM's prototype starts empty, like a new
+- **Demo data** in a prototype beyond its demo account: a prototype starts empty, like a new
   user's install; a profile `seed/` is the place for it.
 - **A harness adapter** (hooks for tool failures and outages, an auto-mode allow list, a tool
   deny list). The push rule is enforced by a git `pre-push` hook instead; merges and

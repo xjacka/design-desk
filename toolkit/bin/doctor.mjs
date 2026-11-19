@@ -14,9 +14,6 @@ export async function main() {
     try { const b = await launch(); const p = await b.newPage(); await p.setContent("<p style='font:20px IBM Plex Sans'>x</p>"); await b.close(); add(true, "browser launches", "headless page rendered"); }
     catch (e) { add(false, "browser launches", e.message.split("\n")[0], installFix); }
   }
-  let ff = ""; try { ff = req("ffmpeg-static"); } catch {}
-  const ffok = ff && existsSync(ff) && run(ff, ["-hide_banner", "-encoders"]).stdout.includes("libx264");
-  add(!!ffok, "ffmpeg (H.264)", ff || "missing", installFix);
   add(!!fontsourceDir("IBM Plex Sans"), "default fonts", "IBM Plex Sans/Mono inlined from npm", installFix);
   const npm = run("npm", ["ping", "--silent"]);
   add(npm.status === 0, "npm registry", npm.status === 0 ? "reachable (repo toolchains and fonts install on demand)" : "unreachable", "the agent's network access must allow registry.npmjs.org");

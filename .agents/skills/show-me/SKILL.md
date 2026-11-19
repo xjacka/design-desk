@@ -3,8 +3,8 @@ name: show-me
 description: >-
   Answer "show me how it looks" with a real picture: take the screen in the state asked for
   on Design Desk's own copy of the product and answer with the picture, on the Desk, in chat
-  or in Slack. Use for questions like "how does Home look with no agents?", "what does the
-  agents list show when one is over budget?", "ukaž mi nastavení agenta v tmavém režimu".
+  or in Slack. Use for questions like "how does the Dashboard look with no invoices?", "what does
+  the invoices list show when one is overdue?", "ukaž mi nastavení účtu v tmavém režimu".
 ---
 
 # Show me
@@ -18,7 +18,7 @@ the picture needs `screens: enabled`.
 line of [docs/requests.md](../../../docs/requests.md) → Who Slack serves, no picture, and stop.
 
 1. **The state.** Restate in one line what will be on the picture: the screen, the data,
-   light or dark, the size ("Home, a new account with no agents, dark, a phone").
+   light or dark, the size ("Dashboard, a new account with no invoices, dark, a phone").
    Unclear which screen → ask once with your best guess.
 2. **Which build.** The shipped product → `main`; a change still in a pull request → its
    `pr<n>` instance when it has one. Bring it up to date ([screens.md](../../../docs/screens.md)).

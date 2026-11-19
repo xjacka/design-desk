@@ -72,7 +72,7 @@ if [ "$STRUCTURE" = 1 ]; then
   else fail definition_clean "the checkout shows changes or untracked files: $(git -C "$HOME_DIR" status --porcelain | head -3 | tr '\n' ' ')" "fix .gitignore (allowlist) or revert the change; never git clean"; fi
   # The allowlist opens with `/*`; the comment lines above it do not count.
   grep -v -E '^[[:space:]]*(#|$)' "$HOME_DIR/.gitignore" 2>/dev/null | head -1 | grep -qx '/\*' && ok gitignore "allowlist" || fail gitignore "the .gitignore is not an allowlist" "restore it from origin/main"
-  if [ -f "$HOME_DIR/.design-desk-onboarded" ]; then ok sentinel "$(cat "$HOME_DIR/.design-desk-onboarded")"
+  if [ -f "$HOME_DIR/.xjacka-design-desk-onboarded" ]; then ok sentinel "$(cat "$HOME_DIR/.xjacka-design-desk-onboarded")"
   else fail sentinel "no onboarding sentinel" "ONBOARDING.md → Step 6"; fi
   if [ ! -x "$HOME_DIR/bin/design" ]; then fail toolkit "~/bin/design is missing" "bash \"\$HOME/scripts/install-toolkit.sh\""
   elif out="$("$HOME_DIR/bin/design" doctor 2>&1)"; then ok toolkit "~/bin/design, design doctor passes"
