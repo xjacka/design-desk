@@ -32,7 +32,7 @@ description: >-
 category: productivity
 icon: paint-brush
 avatar: spark
-docsUrl: https://github.com/dam-agents/design-desk#readme
+docsUrl: https://github.com/xjacka/design-desk#readme
 harnesses: [claude-code]
 
 # `self` is this repository, at the commit the kit was resolved at. Into $HOME, so
