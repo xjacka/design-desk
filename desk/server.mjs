@@ -114,6 +114,8 @@ function settings() {
     slack: cfg("slack_polls", "disabled") === "enabled",
     // Pictures of the options posted to the Slack channel; a request from Slack goes to its thread anyway.
     slackSend: cfg("slack_send", "disabled") === "enabled",
+    // A person's Desk review of a pull request's change is posted there too (docs/watch.md → Reviews on GitHub).
+    reviewPost: cfg("review_post", "disabled") === "enabled",
     // Whether the owner's other agents reach the Desk over MCP, for How it works (docs/mcp.md).
     mcp: ((v) => (["when-awake", "always"].includes(v) ? v : "disabled"))(cfg("mcp_satellite", "disabled")),
     // The Desk's share link: the page builds an item's link from it (docs/desk.md → Links to an item).
@@ -139,7 +141,7 @@ function settings() {
 // The words a person reads when their role lacks an action.
 const VERBS = { ack: "mark changes as seen", handle: "mark changes and issues as handled", "handle-small": "mark changes and issues For Developers as handled", ask: "ask questions", comment: "comment", vote: "vote", request: "send requests", "follow-up": "adjust a change",
   screens: "add screenshots", explore: "start design options", revise: "redraw options", build: "build live prototypes", approve: "approve designs", close: "close requests",
-  reopen: "reopen requests", refresh: "update drawings", share: "share options in Slack", choose: "remove a design option from a request you did not file", queue: "add to the presentation", change: "note changes on an element", figma: "use Figma here", add: "add screens and parts to Product",
+  reopen: "reopen requests", refresh: "update drawings", share: "share options in Slack", choose: "remove a design option from a request you did not file", queue: "add to the presentation", change: "note changes on an element", before: "take pictures from the product", figma: "use Figma here", add: "add screens and parts to Product",
   draw: "draw issues", decide: "record and revoke decisions", size: "move a request between For Developers and For Designers", skip: "decide without a vote or a live prototype", people: "add people to the Desk", resolve: "mark someone else's conversation done", designs: "see Designs", built: "mark designs done" };
 
 const canAll = (role, s) => abilities(role, s.prototypeRoles);
@@ -221,11 +223,13 @@ async function viewerRoute(req, res, url, who) {
     // The page asks who it is once, when it loads: that is the sign-in People reads (docs/desk.md → People).
     // A read never fails for it: a full store keeps no record, and a failed write is dropped.
     try { if (!store.full()) store.markOpened(actor); } catch {}
-    return send(res, 200, { email: who.email, emails: who.emails, my_name: rowOf(who.email)?.name || null, names: namesOf(roster()), key: who.email || who.sub, role: who.deskRole, theme: store.prefsOf(actor).theme, simple: store.prefsOf(actor).simple, figma_pref: store.prefsOf(actor).figma, platformRole: who.role, can: canAll(who.deskRole, s), pings: s.ping && who.deskRole !== "guest", name: s.name, repo: s.repo, contact: s.contact, figma: s.figma, slack: s.slack, slack_send: s.slackSend, screens: s.screens, handoff: s.handoff, spec_review: s.specReview, due_days: s.dueDays, auto_days: s.autoDays, env_days: s.envDays, link: s.link, skills: offerSkills(s.figma), mcp: s.mcp });
+    return send(res, 200, { email: who.email, emails: who.emails, my_name: rowOf(who.email)?.name || null, names: namesOf(roster()), key: who.email || who.sub, role: who.deskRole, theme: store.prefsOf(actor).theme, simple: store.prefsOf(actor).simple, figma_pref: store.prefsOf(actor).figma, platformRole: who.role, can: canAll(who.deskRole, s), pings: s.ping && who.deskRole !== "guest", name: s.name, repo: s.repo, contact: s.contact, figma: s.figma, slack: s.slack, slack_send: s.slackSend, review_post: s.reviewPost, screens: s.screens, handoff: s.handoff, spec_review: s.specReview, due_days: s.dueDays, auto_days: s.autoDays, env_days: s.envDays, link: s.link, skills: offerSkills(s.figma), mcp: s.mcp });
   }
   // Who is on the Desk and what each role may do; only people the owner shared the Desk with get here.
   if (m === "GET" && p[1] === "people") { const ppl = roster(); return send(res, 200, { people: ppl, activity: store.peopleActivity(ppl), roles: Object.fromEntries(ROLES.map((r) => [r, canAll(r, s)])), asks: store.peopleAsks(), addable: ADDABLE_ROLES }); }
   if (m === "GET" && p[1] === "cards" && !p[2]) return send(res, 200, { cards: store.listCards({ kind: url.searchParams.get("kind") || undefined, status: url.searchParams.get("status") || undefined, viewer: who.email || who.sub, who: actor }) });
+  // A person's own draft comments on an item, for them alone (docs/desk.md → Reviews).
+  if (m === "GET" && p[1] === "cards" && p[2] && p[3] === "drafts" && !p[4]) return send(res, 200, store.drafts(p[2], actor));
   if (m === "GET" && p[1] === "cards" && p[2]) {
     const card = store.getCard(p[2], { viewer: who.email || who.sub || null });
     // Each conversation says what this reader may do in it, so the page shows only the controls
@@ -264,7 +268,7 @@ async function viewerRoute(req, res, url, who) {
   if (m !== "GET") {
     if (store.full()) throw new DeskError(507, `The Desk is full and can't save anything new. Tell ${s.contact}; they can archive old changes.`);
     spend(who.email || who.sub, "write");
-    if ((p[1] === "cards" && p[3] === "threads" && ["question", "change"].includes(b.kind)) || p[1] === "private" || (p[1] === "threads" && ["messages", "answers", "decision"].includes(p[3])) || p[1] === "requests" || p[1] === "product" || p[1] === "people" || (p[1] === "cards" && ["actions", "screens", "work-in", "decide", "spec", "text"].includes(p[3]))) spend(who.email || who.sub, "item");
+    if ((p[1] === "cards" && p[3] === "threads" && ["question", "change"].includes(b.kind)) || p[1] === "private" || (p[1] === "threads" && ["messages", "answers", "decision"].includes(p[3])) || p[1] === "requests" || p[1] === "product" || p[1] === "people" || (p[1] === "cards" && ["actions", "screens", "work-in", "decide", "spec", "text"].includes(p[3])) || (p[1] === "cards" && p[3] === "reviews" && b.verdict !== "comment")) spend(who.email || who.sub, "item");
   }
   // A person's own day or night mode and simple mode, kept for them on every device
   // (docs/desk-page.md → The menu); only the keys sent change.
@@ -289,6 +293,17 @@ async function viewerRoute(req, res, url, who) {
     // A question for the designer, from Designs (docs/desk-page.md → Designs).
     const dev = b.dev === true && can(who.deskRole, "designs", s.prototypeRoles);
     return send(res, 201, withPing(store.openThread(p[2], actor, { kind, text, anchor, dev }), s, who));
+  }
+  if (m === "POST" && p[1] === "cards" && p[3] === "drafts" && !p[4]) { need("comment"); return send(res, 201, store.addDraft(p[2], actor, { text: b.text, anchor: b.anchor || null, change: typeof b.change === "string" ? b.change : null })); }
+  if (m === "DELETE" && p[1] === "cards" && p[3] === "drafts" && p[4]) return send(res, 200, store.removeDraft(p[2], actor, p[4]));
+  // A review: the person's drafts sent with a verdict (docs/desk.md → Reviews). Changes asked of a
+  // request are change notes; a change's verdict is the one who may mark it handled (the store checks the rest).
+  if (m === "POST" && p[1] === "cards" && p[3] === "reviews" && !p[4]) {
+    const c = store.card(p[2]), verdict = String(b.verdict || "");
+    if (verdict === "comment" || (c.kind === "request" && verdict === "approve")) need("comment");
+    else if (c.kind === "request") need("change");
+    else if (!can(who.deskRole, "handle-small", s.prototypeRoles)) need("handle");
+    return send(res, 201, withPing(store.sendReview(p[2], actor, { verdict, note: b.note, variant: typeof b.variant === "string" ? b.variant : null, post: s.reviewPost }), s, who));
   }
   if (m === "POST" && p[1] === "private") { need("ask"); return send(res, 201, withPing(store.openPrivate(actor, { text: b.text, starter: typeof b.starter === "string" ? b.starter : null, context: b.context }), s, who)); }
   if (m === "POST" && p[1] === "threads" && p[3] === "messages") { need(store.threadNeed(p[2], actor)); return send(res, 201, withPing(store.reply(p[2], actor, b.text), s, who)); }
@@ -389,8 +404,9 @@ async function viewerRoute(req, res, url, who) {
     // the store checks who (docs/desk.md → For Developers or For Designers, Deciding straight away).
     // Drawing every state of a part is changing the option: a designer's, a PM's or a developer's.
     // A request's author removes its options whatever their role (docs/desk.md → Roles).
-    if (!(action === "approve" && (store.card(p[2]).size?.small || can(who.deskRole, "skip", s.prototypeRoles))) && !(action === "drop-option" && store.filedBy(p[2], actor))) need(action.startsWith("figma-") ? "figma" : action.startsWith("slack-") ? "share" : ["states", "alternatives", "pick-alternative"].includes(action) ? "revise" : action === "drop-option" ? "choose" : ["add-option", "draw-now"].includes(action) ? "explore" : action === "switch-off" ? "build" : action);
+    if (!(action === "approve" && (store.card(p[2]).size?.small || can(who.deskRole, "skip", s.prototypeRoles))) && !(action === "drop-option" && store.filedBy(p[2], actor))) need(action.startsWith("figma-") ? "figma" : action.startsWith("slack-") ? "share" : ["states", "alternatives", "pick-alternative"].includes(action) ? "revise" : action === "drop-option" ? "choose" : ["add-option", "draw-now"].includes(action) ? "explore" : action === "take-before" ? "before" : action === "switch-off" ? "build" : action);
     if (action.startsWith("figma-") && !s.figma) throw new DeskError(400, "Figma is not connected to this Desk yet.");
+    if (action === "take-before" && !s.screens) throw new DeskError(400, `Pictures from the product need Design Desk's own copy of it, which is not turned on yet. Ask ${s.contact}.`);
     if (action === "slack-share" && !s.slack) throw new DeskError(400, "Slack voting is not turned on for this Desk yet.");
     // Straight to implementation labels an issue: only where the approved spec reaches GitHub (docs/handoff.md, step 5).
     if (action === "approve" && b.implement === true && (s.handoff[store.card(p[2]).request?.type || "idea"] || "desk") === "desk") throw new DeskError(400, "This request's spec stays on the Desk, so it cannot go straight to the coding agent.");
@@ -423,7 +439,7 @@ async function agentRoute(req, res, url) {
   // What a check reads (docs/desk.md → Decisions → The check).
   if (m === "GET" && p[1] === "cards" && p[3] === "decision-check") return send(res, 200, store.decisionCheck(p[2], { concepts: (url.searchParams.get("concept") || "").split(",").filter(Boolean), q: url.searchParams.get("q") || "" }));
   if (m === "GET" && p[1] === "cards" && p[2]) return send(res, 200, { card: store.getCard(p[2]) });
-  if (m === "GET" && p[1] === "items" && p[2]) { const it = store.item(p[2]); return send(res, 200, { item: it, card: it.card ? store.getCard(it.card) : null, thread: it.thread ? store.thread(it.thread) : null }); }
+  if (m === "GET" && p[1] === "items" && p[2]) { const it = store.item(p[2]); return send(res, 200, { item: it, card: it.card ? store.getCard(it.card) : null, thread: it.thread ? store.thread(it.thread) : null, ...(it.review ? { review: store.db.reviews[it.review] || null } : {}) }); }
   if (m === "GET" && p[1] === "stats") return send(res, 200, store.stats());
   // The approved designs a shipped change may build (docs/watch.md → Approved design).
   if (m === "GET" && p[1] === "designs") return send(res, 200, { designs: store.approvedDesigns() });
@@ -471,6 +487,7 @@ async function agentRoute(req, res, url) {
   if (m === "POST" && p[1] === "items" && p[3] === "done") return send(res, 200, store.done(p[2], String(b.session || ""), b.outcome || "done"));
   // An ask to add a person carries its payload; only an admin's ask on the page makes one.
   if (m === "GET" && p[1] === "github") { const card = url.searchParams.get("card"); const keys = url.searchParams.get("keys"); return send(res, 200, keys ? { records: store.github(keys.split(",").filter(Boolean)) } : { refs: store.githubRefs(card || null) }); }
+  if (m === "POST" && p[1] === "reviews" && p[3] === "posted") return send(res, 200, store.reviewPosted(p[2], { url: b.url, sha: b.sha || null }));
   if (m === "POST" && p[1] === "github" && p[2] === "failed") return send(res, 200, store.failGithub(b.keys));
   if (m === "POST" && p[1] === "github" && p[2] === "marks") return send(res, 200, store.markGithub(b.key, { at: b.at, author: b.author, design: b.design !== false }));
   if (m === "POST" && p[1] === "github") return send(res, 200, store.putGithub(b.records));

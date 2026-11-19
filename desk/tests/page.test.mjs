@@ -2022,7 +2022,7 @@ test("in Select mode the review bar acts: a hover or a click on it picks nothing
     await desk.click("[data-ws-close]");
     await desk.click('#detail [data-el="save"]');
     await desk.waitForSelector("#element-dialog[open] [data-el-states]");
-    assert.match(await desk.textContent("#element-dialog"), /Save button[\s\S]*New[\s\S]*Tabs · version 2[\s\S]*In the design[\s\S]*Draw every state/);
+    assert.match(await desk.textContent("#element-dialog"), /Save button[\s\S]*New[\s\S]*Tabs · version 2[\s\S]*Open in design workspace[\s\S]*New[\s\S]*As Tabs draws it, version 2[\s\S]*Draw every state/);
     await desk.click("#element-dialog [data-el-states]");
     await desk.fill("#confirm-form [name=note]", "The error first.");
     await desk.locator("#confirm-dialog .actions button", { hasText: "Draw the states" }).click();
@@ -2031,6 +2031,179 @@ test("in Select mode the review bar acts: a hover or a click on it picks nothing
     assert.deepEqual([body.action, body.note, body.variant, body.element, body.part.text, body.part.label, body.part.view, body.part.view_name, body.part.selector], ["states", "The error first.", "v1", "save", "Save button", "Save button", "2", "Billing", '[data-view="2"] button']);
   } finally {
     await run.close();
+  }
+});
+
+// An element's dialog: the part before (from the product, else cut from how it looks today) beside
+// after, one picture for a new part, the button that takes it from the product, and the way into
+// the design workspace at the part (docs/desk-page.md → The element dialog).
+const BEFORE_PAGE = `<!doctype html><html><body><div data-view="1" data-view-name="Agents"><div id="card" style="width:300px;height:80px;background:#36c">Agent</div><p id="label">Limit</p><p id="added">New</p></div></body></html>`;
+const NOW_PAGE = `<!doctype html><html><body><div data-view="1"><div id="card" style="width:300px;height:80px;background:#999">Agent today</div><p id="label">Limit today</p></div></body></html>`;
+const SHOT = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="20"><rect width="40" height="20" fill="#000"/></svg>`;
+const bridgeBefore = ({ me = 'role: "designer", email: "alice@example.com", screens: true, can: { comment: true, change: true, before: true }' } = {}) => `<script>
+window.calls = [];
+const at = new Date().toISOString();
+const request = { id: "r7", kind: "request", title: "Agent card", status: "feedback", created: at, triage: { verdict: "design", reasons: [] }, prototype: { state: "none" },
+  shared_elements: [{ id: "card", name: "Agent card" }, { id: "label", name: "Limit label" }, { id: "added", name: "Added note" }],
+  now: { asset: "A-now", name: "Agents", at, elements: [{ id: "card", selector: "#card", view: 1, view_name: "Agents" }, { id: "label", selector: "#label", view: 1, view_name: "Agents" }] },
+  before_shots: [{ id: "card", asset: "A-shot", source: "instance", ref: "main", commit: "4286de5", at }],
+  variants: [{ id: "v1", name: "Calm", asset: "A-1", fidelity: "mockup", version: 2, elements: [
+    { id: "card", name: "Agent card", change: "changed", how: "Calmer.", selector: "#card", view: "1", view_name: "Agents" },
+    { id: "label", name: "Limit label", change: "changed", how: "Shorter.", selector: "#label", view: "1", view_name: "Agents" },
+    { id: "added", name: "Added note", change: "new", how: "Says which limit stops first.", selector: "#added", view: "1", view_name: "Agents" }] }],
+  threads: [
+    { id: "T-1", kind: "comment", state: "open", anchor: { variant: "v1", selector: "#label", label: "Limit label" }, messages: [{ by: { name: "Pat Lee" }, at, text: "Shorter still?" }, { by: { agent: true }, at, text: "Yes." }] },
+    { id: "T-2", kind: "comment", state: "open", anchor: { variant: "v1", selector: "#card", label: "Agent card" }, messages: [{ by: { name: "Pat Lee" }, at, text: "On the card." }] },
+    { id: "T-3", kind: "comment", state: "resolved", anchor: { variant: "v1", selector: "#label", label: "Limit label" }, messages: [{ by: { name: "Pat Lee" }, at, text: "Done long ago." }] }],
+  waiting: [] };
+window.platform = { async request({ method, path, body }) {
+  calls.push({ method, path, body });
+  const answer = path === "/api/me" ? { ${me} }
+    : path === "/api/cards" ? { cards: [{ ...request, variants: 1, threads: undefined }] } : path === "/api/agenda" ? { agenda: [] }
+    : path === "/api/cards/r7" ? { card: request }
+    : path === "/api/cards/r7/actions" ? { inbox: { kind: "explore", scope: "before" } }
+    : path === "/api/assets/A-1" ? { contentType: "text/html", encoding: "utf8", data: ${JSON.stringify(BEFORE_PAGE).replace(/</g, "\\u003c")} }
+    : path === "/api/assets/A-now" ? { contentType: "text/html", encoding: "utf8", data: ${JSON.stringify(NOW_PAGE).replace(/</g, "\\u003c")} }
+    : path === "/api/assets/A-shot" ? { contentType: "image/svg+xml", encoding: "utf8", data: ${JSON.stringify(SHOT).replace(/</g, "\\u003c")} } : {};
+  return { status: 200, contentType: "application/json", body: JSON.stringify(answer) };
+} };
+try { localStorage.setItem("desk-guide-seen", "1"); } catch {}
+</script>`;
+
+test("an element's dialog shows the part before and after, says where before came from, and opens the workspace at the part", async (t) => {
+  const run = await launch(t, bridgeBefore());
+  if (!run) return;
+  const { desk, posts } = run;
+  try {
+    await desk.click('[data-card="r7"]');
+    // A part with a picture from the product: that picture, where it came from, and Take it again.
+    await desk.click('#detail [data-el="card"]');
+    await desk.waitForSelector("#element-dialog[open] .el-pair");
+    const card = await desk.textContent("#element-dialog");
+    assert.match(card, /Before[\s\S]*The product at main \(4286de5\), with made-up data[\s\S]*Take it again[\s\S]*After[\s\S]*As Calm draws it, version 2/);
+    assert.equal(await desk.locator("#element-dialog .el-col:first-child img[data-asset='A-shot']").count(), 1);
+    // After is drawn wide and scaled into its box, so the part is laid out as on a screen.
+    await desk.waitForFunction(() => /scale\(/.test(document.querySelector("#element-dialog .el-col:last-child iframe[data-snip-wide]")?.style.transform || ""));
+    await desk.click("[data-el-close]");
+    // A part with only how it looks today: cut from that drawing, said to be redrawn.
+    await desk.click('#detail [data-el="label"]');
+    await desk.waitForSelector("#element-dialog[open] .el-pair");
+    assert.match(await desk.textContent("#element-dialog"), /Before[\s\S]*Redrawn from the code by Design Desk[\s\S]*Take it from the product/);
+    assert.deepEqual(await desk.$eval("#element-dialog .el-col:first-child iframe", (f) => [f.dataset.snipAsset, f.dataset.snipSel, f.hasAttribute("data-snip-wide")]), ["A-now", "#label", true]);
+    await desk.click('#element-dialog [data-act="take-before"]');
+    await desk.waitForFunction(() => calls.some((c) => c.method === "POST" && c.path === "/api/cards/r7/actions"));
+    const body = JSON.parse((await posts("/api/cards/r7/actions"))[0].body);
+    assert.deepEqual([body.action, body.element], ["take-before", "label"]);
+    // A part the option adds: one picture, New, nothing to take.
+    if (await desk.locator("#element-dialog[open]").count()) await desk.click("[data-el-close]");
+    await desk.click('#detail [data-el="added"]');
+    await desk.waitForSelector("#element-dialog[open] .el-pair.one");
+    const added = await desk.textContent("#element-dialog .el-pair");
+    assert.match(added, /New/);
+    assert.doesNotMatch(added, /Before|Take it/);
+    // Open in design workspace: the option, the part selected.
+    await desk.click("#element-dialog [data-el-ws]");
+    await desk.waitForSelector("#ws-frame");
+    assert.equal(await desk.locator("#element-dialog[open]").count(), 0, "the dialog closes");
+    await desk.waitForFunction(() => /Selected\s*Added note/.test(document.querySelector("#ws-side")?.textContent || ""));
+  } finally {
+    await run.close();
+  }
+});
+
+// How it looks today: its own section, open while the request is checked, and Compare with today
+// on the option (docs/desk-page.md → How it looks today).
+const NOW_SHOTS = `now: { name: "Agents", at, shots: [{ asset: "A-shot", name: "Agents", ref: "main", commit: "4286de5", width: 1440, height: 900,
+    parts: [{ id: "card", x: 100, y: 200, w: 300, h: 80 }, { id: "label", x: 100, y: 300, w: 200, h: 20 }] }] },`;
+test("how it looks today is a section of its own, open while the request is checked, its parts numbered on the product's picture", async (t) => {
+  const bridge = bridgeBefore().replace('status: "feedback"', 'status: "triage"').replace(/now: \{ asset: "A-now"[^\n]*\n/, `${NOW_SHOTS}\n`).replace(/before_shots: [^\n]*\n/, "").replace(/variants: \[\{ id: "v1"[\s\S]*?\] \}\],\n/, "variants: [],\n");
+  const run = await launch(t, bridge);
+  if (!run) return;
+  const { desk } = run;
+  try {
+    await desk.click('[data-card="r7"]');
+    await desk.waitForSelector('#detail details[data-sect="today"][open] .today-shot svg image[href]');
+    const today = await desk.textContent('#detail [data-sect="today"]');
+    assert.match(today, /How it looks today · Agents[\s\S]*The product at main \(4286de5\), with made-up data/);
+    assert.match(today, /1\s*Agent card[\s\S]*2\s*Limit label[\s\S]*3\s*Not in the product today\s*Added note/);
+    assert.equal(await desk.locator('#detail [data-sect="today"] .today-shot svg rect').count(), 2, "each part the product has is outlined");
+    assert.deepEqual(await desk.$$eval('#detail .today-parts .tp svg', (xs) => xs.map((x) => x.getAttribute("viewBox"))), ["92 192 316 96", "92 292 216 36"], "each part is cut from the picture, 8 px round it");
+    assert.equal(await desk.locator("[data-cmp-mode]").count(), 0, "no switch before there is an option");
+  } finally {
+    await run.close();
+  }
+});
+
+test("Compare with today sets each part and the whole screen beside how it looks today", async (t) => {
+  const run = await launch(t, bridgeBefore());
+  if (!run) return;
+  const { desk } = run;
+  try {
+    await desk.click('[data-card="r7"]');
+    await desk.waitForSelector("#detail .eltile");
+    assert.equal(await desk.locator('#detail details[data-sect="today"][open]').count(), 0, "folded past Checking");
+    assert.equal(await desk.locator("#detail .elpic.ba").count(), 0, "off by default: the option alone");
+    assert.equal(await desk.getAttribute("[data-cmp-mode]", "aria-checked"), "false");
+    await desk.click("[data-cmp-mode]");
+    await desk.waitForSelector("#detail .elpic.ba");
+    assert.match(await desk.textContent('#detail [data-sect="elements"]'), /2 changed[\s\S]*1 new[\s\S]*Today[\s\S]*Calm/);
+    assert.equal(await desk.locator('#detail .eltile .bap img[data-asset="A-shot"]').count(), 1, "a part's own picture from the product");
+    assert.equal(await desk.locator('#detail .eltile .bap iframe[data-snip-asset="A-now"][data-snip-sel="#label"]').count(), 1, "else cut from the drawing");
+    assert.match(await desk.textContent("#detail .eltile:nth-child(3) .bap.none"), /Not in the product today/);
+    // The whole screen: the slider first, side by side on a press; off again gives the option alone.
+    assert.equal(await desk.locator('#detail [data-slider] iframe[data-pane-asset="A-now"]').count(), 1);
+    await desk.click('[data-cmp-view="side"]');
+    await desk.waitForSelector('#detail .split iframe[data-pane-asset="A-now"]');
+    assert.equal(await desk.locator("#detail .split #variant-frame").count(), 1);
+    await desk.click("[data-cmp-mode]");
+    await desk.waitForSelector("#detail #variant-frame:not(.split #variant-frame)");
+    assert.equal(await desk.locator("#detail .elpic.ba, #detail [data-slider], #detail .split").count(), 0);
+  } finally {
+    await run.close();
+  }
+});
+
+test("an element's dialog lists the part's open comments and comments on the part", async (t) => {
+  const run = await launch(t, bridgeBefore());
+  if (!run) return;
+  const { desk, posts } = run;
+  try {
+    await desk.click('[data-card="r7"]');
+    await desk.click('#detail [data-el="label"]');
+    await desk.waitForSelector("#element-dialog[open] .el-talk");
+    const talk = await desk.textContent("#element-dialog .el-talk");
+    assert.match(talk, /Comments · 1[\s\S]*Pat Lee[\s\S]*Shorter still\?[\s\S]*1 reply/);
+    assert.doesNotMatch(talk, /On the card|Done long ago/, "not another part's, nor one marked done");
+    await desk.click("#element-dialog [data-el-comment]");
+    assert.equal((await posts("/api/cards/r7/threads")).length, 0, "nothing written, nothing sent");
+    await desk.fill("#el-text", "Make the label shorter");
+    await desk.click("#element-dialog [data-el-comment]");
+    await desk.waitForFunction(() => calls.some((c) => c.method === "POST" && c.path === "/api/cards/r7/threads"));
+    const body = JSON.parse((await posts("/api/cards/r7/threads"))[0].body);
+    assert.deepEqual([body.kind, body.text, body.anchor.variant, body.anchor.selector, body.anchor.label, body.anchor.view, body.anchor.view_name], ["comment", "Make the label shorter", "v1", "#label", "Limit label", "1", "Agents"]);
+    // A note in the list opens the design workspace at it.
+    await desk.click('#element-dialog [data-goto="T-1"]');
+    await desk.waitForSelector("#ws-frame");
+    assert.equal(await desk.locator("#element-dialog[open]").count(), 0, "the dialog closes");
+  } finally {
+    await run.close();
+  }
+});
+
+test("only a member takes a part from the product, and only with Design Desk's copy of the product", async (t) => {
+  for (const [me, why] of [['role: "designer", email: "alice@example.com", screens: true, can: { comment: true }', "without the ability (a guest's)"], ['role: "designer", email: "alice@example.com", screens: false, can: { comment: true, before: true }', "screens off"]]) {
+    const run = await launch(t, bridgeBefore({ me }));
+    if (!run) return;
+    const { desk } = run;
+    try {
+      await desk.click('[data-card="r7"]');
+      await desk.click('#detail [data-el="label"]');
+      await desk.waitForSelector("#element-dialog[open] .el-pair");
+      assert.match(await desk.textContent("#element-dialog"), /Redrawn from the code/, why);
+      assert.equal(await desk.locator('#element-dialog [data-act="take-before"]').count(), 0, why);
+    } finally {
+      await run.close();
+    }
   }
 });
 
@@ -3435,7 +3608,7 @@ test("Questions and comments starts open, keeps how it was left, and reopens whe
   assert.match(page, /if \(ds\.post\) \{ S\.convoOpen = true; S\.sect\.talk = true;/, "a post opens it");
   assert.match(page, /const talk = t\.closest\("details\.talk"\); S\.sect\.talk = true; if \(talk\) talk\.open = true;\s*S\.concern = /, "a concern opens it before the box is filled");
   assert.match(page, /const talk = pub\.closest\("details\.talk"\); S\.sect\.talk = true; if \(talk\) talk\.open = true;\s*pub\.value = briefFrom\(th\)/, "a brief opens it before the box is filled");
-  assert.match(page, /if \(x\.thread && !x\.private\) \{ S\.convoOpen = true; S\.sect\.talk = true; \}/, "a thread's notification opens it");
+  assert.match(page, /if \(\(x\.thread \|\| x\.review\) && !x\.private\) \{ S\.convoOpen = true; S\.sect\.talk = true; \}/, "a thread's or a review's notification opens it");
   const run = await launch(t, BRIDGE);
   if (!run) return;
   const { desk, close } = run;
@@ -3797,7 +3970,7 @@ const cards = ${JSON.stringify(cards)};
 window.platform = { async request({ method, path, body }) {
   if (method === "POST") { posts.push({ path, body: JSON.parse(body || "{}") }); return { status: 200, contentType: "application/json", body: JSON.stringify({ thread: { id: "T-9" } }) }; }
   const answer = path === "/api/me" ? ${JSON.stringify(me)}
-    : path === "/api/cards" ? { cards } : path.startsWith("/api/cards/") ? { card: cards.find((c) => c.id === decodeURIComponent(path.split("/")[3])) }
+    : path === "/api/cards" ? { cards } : path.endsWith("/drafts") ? { drafts: [] } : path.startsWith("/api/cards/") ? { card: cards.find((c) => c.id === decodeURIComponent(path.split("/")[3])) }
     : path === "/api/agenda" ? { agenda: [] } : path === "/api/notifications" ? { seen: null, unread: 0, items: [] } : path === "/api/private" ? { asks: ${JSON.stringify(asks)} } : {};
   return { status: 200, contentType: "application/json", body: JSON.stringify(answer) };
 } };
@@ -3831,18 +4004,171 @@ test("simple mode heads a request with its number, link, state, author and two m
   assert.equal((await desk.evaluate(() => posts.find((p) => p.path === "/api/cards/R-5/actions").body)).auto_send, true);
 }));
 
-test("simple mode's Request changes sends a note Design Desk draws a new version from; ⋯ holds Close", (t) => open(t, HEAD_DESK(HEAD_ME, [drawn]), async (desk) => {
+test("simple mode's Request changes opens the review: a note alone is sent with the verdict; ⋯ holds Close", (t) => open(t, HEAD_DESK(HEAD_ME, [drawn]), async (desk) => {
   await desk.waitForSelector('#list [data-card="R-5"]');
   await desk.click('#list [data-card="R-5"]');
   await desk.waitForSelector("#detail .shead");
   await desk.click("#detail details.sh-more > summary");
   assert.deepEqual(await desk.$$eval("#detail .sh-more .menu > *", (xs) => xs.map((x) => x.textContent.trim())), ["Close…"]);
   await desk.keyboard.press("Escape");
-  await desk.click('#detail [data-act="request-changes"]');
+  await desk.click('#detail .sh-acts [data-review="request-changes"]');
+  assert.equal(await desk.textContent("#cf-title"), "Send your review");
+  assert.equal(await desk.$eval("#cf-choices input:checked", (x) => x.value), "request-changes");
+  assert.deepEqual(await desk.$$eval("#cf-choices input", (xs) => xs.map((x) => x.value)), ["request-changes", "approve", "comment"]);
+  await desk.click("#cf-ok");
+  await desk.waitForSelector("#confirm-dialog[open] .toast");
+  assert.match(await desk.textContent("#confirm-dialog .toast"), /Write a comment or a note first/, "nothing to send: the dialog stays");
   await desk.fill("#confirm-form [name=note]", "Make the bar thicker.");
   await desk.click("#cf-ok");
+  await desk.waitForFunction(() => posts.some((p) => p.path === "/api/cards/R-5/reviews"));
+  assert.deepEqual(await desk.evaluate(() => posts.find((p) => p.path === "/api/cards/R-5/reviews").body), { verdict: "request-changes", note: "Make the bar thicker.", variant: "v1" }, "the option shown, for a note about no option");
+}));
+
+// A review in the making (docs/desk.md → Reviews): the Desk keeps the drafts; this stand-in does too.
+const REVIEW_DESK = (me, cards) => `<script>
+window.posts = []; window.drafts = {};
+const cards = ${JSON.stringify(cards)};
+window.platform = { async request({ method, path, body }) {
+  const b = JSON.parse(body || "{}"), id = decodeURIComponent(path.split("/")[3] || ""), json = (x, status = 200) => ({ status, contentType: "application/json", body: JSON.stringify(x) });
+  if (method !== "GET") posts.push({ method, path, body: b });
+  if (/\\/drafts$/.test(path) && method === "GET") return window.failDrafts ? json({ error: "down" }, 503) : json({ drafts: drafts[id] || [] });
+  if (/\\/drafts$/.test(path)) { drafts[id] = [...(drafts[id] || []), { id: "d" + posts.length, text: b.text, anchor: b.anchor || null, ...(b.change ? { change: b.change } : {}), at: "2026-11-18T10:00:00Z" }]; return json({ drafts: drafts[id] }, 201); }
+  if (/\\/drafts\\//.test(path)) { drafts[id] = (drafts[id] || []).filter((d) => d.id !== path.split("/")[5]); return json({ drafts: drafts[id] }); }
+  if (/\\/reviews$/.test(path)) { if (!(drafts[id] || []).length && !b.note) return json({ error: "Write a comment or a note first." }, 400); drafts[id] = []; return json({ review: { id: "U-1" }, inbox: cards.find((c) => c.id === id)?.kind === "change" ? { kind: "review" } : { kind: "revise" } }, 201); }
+  if (method !== "GET") return json({ thread: { id: "T-9" } });
+  const answer = path === "/api/me" ? ${JSON.stringify(me)}
+    : path === "/api/cards" ? { cards } : path.startsWith("/api/cards/") ? { card: cards.find((c) => c.id === id) }
+    : path === "/api/agenda" ? { agenda: [] } : path === "/api/notifications" ? { seen: null, unread: 0, items: [] } : path === "/api/private" ? { asks: [] } : {};
+  return json(answer);
+} };
+try { localStorage.setItem("desk-guide-seen", "1"); } catch {}
+</script>`;
+
+test("simple mode: Add to review keeps a comment for the review, Comment now posts it; Your review lists and removes them; the head counts them", (t) => open(t, REVIEW_DESK(HEAD_ME, [drawn, prChange]), async (desk) => {
+  await desk.waitForSelector('#list [data-card="R-5"]');
+  await desk.click('#list [data-card="R-5"]');
+  await desk.waitForSelector("#detail .rbox");
+  assert.match(await desk.getAttribute("#detail .rbox textarea", "placeholder"), /Option 1 · Calm/, "the box is about the option shown");
+  await desk.fill("#detail .rbox textarea", "Tighter rows.");
+  await desk.click("#detail .rbox [data-draft-add]");
+  await desk.waitForSelector("#detail .yreview .dbub");
+  assert.deepEqual(await desk.evaluate(() => posts.find((p) => /drafts$/.test(p.path)).body), { text: "Tighter rows.", anchor: { variant: "v1" } });
+  assert.match(await desk.textContent("#detail .yreview"), /Your review · 1[\s\S]*Option 1 · Calm[\s\S]*Tighter rows\./);
+  assert.match(await desk.textContent('#detail .sh-acts [data-review="request-changes"]'), /Request changes · 1/);
+  assert.equal(await desk.locator("#detail .sh-acts .btn.primary").count(), 1, "one next step");
+  assert.equal(await desk.getAttribute('#detail .sh-acts [data-review="request-changes"]', "class"), "btn primary", "and it is Request changes");
+  await desk.fill("#detail .rbox textarea", "Second.");
+  await desk.click("#detail .rbox [data-draft-add]");
+  await desk.waitForFunction(() => document.querySelectorAll("#detail .yreview .dbub").length === 2);
+  await desk.click("#detail .yreview .dbub:last-child [data-draft-del]");
+  await desk.waitForFunction(() => document.querySelectorAll("#detail .yreview .dbub").length === 1);
+  assert.ok(await desk.evaluate(() => posts.some((p) => p.method === "DELETE" && /\/drafts\/d/.test(p.path))));
+  // Comment now: a comment on the Desk at once, not in the review.
+  await desk.fill("#detail .rbox textarea", "Looks calm.");
+  await desk.click("#detail .rbox [data-draft-now]");
   await desk.waitForFunction(() => posts.some((p) => p.path === "/api/cards/R-5/threads"));
-  assert.deepEqual(await desk.evaluate(() => posts.find((p) => p.path === "/api/cards/R-5/threads").body), { kind: "change", text: "Make the bar thicker.", anchor: { variant: "v1" } });
+  assert.deepEqual(await desk.evaluate(() => posts.find((p) => p.path === "/api/cards/R-5/threads").body), { kind: "comment", text: "Looks calm.", anchor: { variant: "v1" } });
+  // Send: the drafts in the dialog, one review.
+  await desk.click('#detail .sh-acts [data-review="request-changes"]');
+  assert.match(await desk.textContent("#cf-body"), /Tighter rows\./);
+  await desk.click("#cf-ok");
+  await desk.waitForFunction(() => posts.some((p) => p.path === "/api/cards/R-5/reviews"));
+  assert.equal((await desk.evaluate(() => posts.find((p) => p.path === "/api/cards/R-5/reviews").body)).verdict, "request-changes");
+  await desk.waitForFunction(() => !document.querySelector("#detail .yreview"));
+}));
+
+test("simple mode: a change's review offers Request changes and Approve to who may mark it handled, Comment only to everyone; with review_post it goes to the pull request", (t) => open(t, REVIEW_DESK({ ...HEAD_ME, review_post: true }, [prChange]), async (desk) => {
+  await desk.waitForSelector('#list [data-card="P-3"]');
+  await desk.click('#list [data-card="P-3"]');
+  await desk.waitForSelector("#detail .rbox");
+  await desk.fill("#detail .rbox textarea", "The toggle is too loud.");
+  await desk.click("#detail .rbox [data-draft-add]");
+  await desk.waitForSelector("#detail .yreview .dbub");
+  await desk.click('#detail .sh-acts [data-review="approve"]');
+  assert.deepEqual(await desk.$$eval("#cf-choices input", (xs) => xs.map((x) => x.value)), ["request-changes", "approve", "comment"]);
+  assert.equal(await desk.$eval("#cf-choices input:checked", (x) => x.value), "approve");
+  assert.match(await desk.textContent("#cf-body"), /pull request on GitHub/);
+  await desk.click('#cf-choices input[value="comment"]');
+  await desk.click("#cf-ok");
+  await desk.waitForFunction(() => posts.some((p) => p.path === "/api/cards/P-3/reviews"));
+  assert.equal((await desk.evaluate(() => posts.find((p) => p.path === "/api/cards/P-3/reviews").body)).verdict, "comment");
+}));
+
+// A sent review (docs/desk.md → Reviews): one block, its comments under it, in both modes.
+const reviewed = { ...prChange, id: "P-8", title: "Reviewed", responsible: { who: "developer", review: "U-1", since: "2026-11-18T10:00:00Z" },
+  reviews: [{ id: "U-1", by: { email: "d.k@example.com", name: "Dana Kim", role: "designer" }, at: "2026-11-18T10:00:00Z", verdict: "request-changes", note: "Two things.", threads: ["T-21", "T-22"], posted: { url: "https://github.com/o/r/pull/812#pullrequestreview-1" } }],
+  threads: [
+    { id: "T-21", kind: "comment", review: "U-1", state: "open", may: { reply: true, resolve: true }, messages: [{ by: { email: "d.k@example.com", role: "designer" }, at: "2026-11-18T10:00:00Z", text: "Toggle too loud." }] },
+    { id: "T-22", kind: "comment", review: "U-1", state: "open", may: { reply: true, resolve: true }, messages: [{ by: { email: "d.k@example.com", role: "designer" }, at: "2026-11-18T10:00:00Z", text: "Label shorter." }] },
+    { id: "T-23", kind: "comment", state: "open", may: { reply: true, resolve: true }, messages: [{ by: { email: "pat@example.com", role: "pm" }, at: "2026-11-18T09:00:00Z", text: "Unrelated." }] }] };
+
+test("simple mode: a sent review is one block with its comments; a change that waits for its developer is In dev and says so", (t) => open(t, REVIEW_DESK({ ...HEAD_ME, simFilter: null }, [reviewed]), async (desk) => {
+  await desk.evaluate(() => localStorage.setItem("desk-simFilter", JSON.stringify({ states: ["open", "dev", "closed"], kinds: ["request", "change"] })));
+  await desk.reload();
+  await desk.waitForSelector('#list [data-card="P-8"]');
+  await desk.click('#list [data-card="P-8"]');
+  await desk.waitForSelector("#detail .rvw");
+  assert.match(await desk.textContent("#detail .sh-line .spill"), /In dev/);
+  assert.match(await desk.textContent("#detail .sh-line"), /Changes requested · developer/);
+  assert.deepEqual(await desk.$$eval("#detail .sh-acts > .btn", (xs) => xs.map((x) => x.textContent.trim())), ["Request changes", "Approve"], "a designer still approves it while it waits");
+  assert.equal(await desk.locator("#detail .rvw .sthread").count(), 2, "its two comments inside it");
+  assert.match(await desk.textContent("#detail .rvw .rv-h"), /Dana Kim[\s\S]*Changes requested[\s\S]*On GitHub/);
+  assert.match(await desk.textContent("#detail .rvw .rv-note"), /Two things\./);
+  assert.equal(await desk.locator("#detail .sthreads > .sthread").count(), 1, "the other comment stays on its own");
+}));
+
+test("full mode shows a sent review as one block in the conversation", (t) => open(t, REVIEW_DESK({ ...HEAD_ME, simple: false }, [{ ...reviewed, status: "new" }]), async (desk) => {
+  await desk.evaluate(() => { location.hash = "#P-8"; });
+  await desk.waitForSelector("#detail .rvw", { state: "attached" });
+  assert.equal(await desk.locator("#detail .rvw .thread").count(), 2);
+  assert.match(await desk.textContent("#detail .rvw .rv-v"), /Changes requested/);
+  assert.match(await desk.textContent("#detail .sh-resp"), /Changes requested · developer/, "full mode says who makes the next version too");
+}));
+
+test("full mode collects drafts under an option and sends them from Your review with the same dialog", (t) => open(t, REVIEW_DESK({ ...HEAD_ME, simple: false }, [drawn]), async (desk) => {
+  await desk.evaluate(() => { location.hash = "#R-5"; });
+  await desk.waitForSelector("#detail .rbox");
+  await desk.fill("#detail .rbox textarea", "Calmer bar.");
+  await desk.click("#detail .rbox [data-draft-add]");
+  await desk.waitForSelector("#detail .talk .yreview .dbub");
+  assert.match(await desk.textContent("#detail .talk .yreview"), /Your review · 1[\s\S]*Calmer bar\./);
+  await desk.click('#detail .yreview [data-review=""]');
+  assert.deepEqual(await desk.$$eval("#cf-choices input", (xs) => xs.map((x) => x.value)), ["request-changes", "approve", "comment"]);
+  await desk.click('#cf-choices input[value="comment"]');
+  await desk.click("#cf-ok");
+  await desk.waitForFunction(() => posts.some((p) => p.path === "/api/cards/R-5/reviews"));
+  assert.equal((await desk.evaluate(() => posts.find((p) => p.path === "/api/cards/R-5/reviews").body)).verdict, "comment");
+}));
+
+test("a review is never sent from drafts the page could not read", (t) => open(t, REVIEW_DESK(HEAD_ME, [drawn]), async (desk) => {
+  await desk.waitForSelector('#list [data-card="R-5"]');
+  await desk.click('#list [data-card="R-5"]');
+  await desk.waitForSelector("#detail .shead");
+  await desk.evaluate(() => { window.failDrafts = true; });
+  await desk.click('#detail .sh-acts [data-review="request-changes"]');
+  await desk.waitForSelector(".toast");
+  assert.match(await desk.textContent(".toast"), /could not be read/);
+  assert.equal(await desk.locator("#confirm-dialog[open]").count(), 0, "no dialog");
+}));
+
+test("without review_post, a change's review says nothing of GitHub", (t) => open(t, REVIEW_DESK(HEAD_ME, [prChange]), async (desk) => {
+  await desk.waitForSelector('#list [data-card="P-3"]');
+  await desk.click('#list [data-card="P-3"]');
+  await desk.waitForSelector("#detail .shead");
+  await desk.click('#detail .sh-acts [data-review="request-changes"]');
+  assert.doesNotMatch(await desk.textContent("#confirm-dialog"), /GitHub|pull request/);
+}));
+
+test("simple mode: a guest's review is Comment only", (t) => open(t, REVIEW_DESK({ ...HEAD_ME, role: "guest", can: { comment: true } }, [prChange]), async (desk) => {
+  await desk.waitForSelector('#list [data-card="P-3"]');
+  await desk.click('#list [data-card="P-3"]');
+  await desk.waitForSelector("#detail .rbox");
+  assert.equal(await desk.locator("#detail .sh-acts [data-review]").count(), 0, "no verdict in the head");
+  await desk.fill("#detail .rbox textarea", "Hm.");
+  await desk.click("#detail .rbox [data-draft-add]");
+  await desk.waitForSelector('#detail .yreview [data-review=""]');
+  await desk.click('#detail .yreview [data-review=""]');
+  assert.deepEqual(await desk.$$eval("#cf-choices input", (xs) => xs.map((x) => x.value)), ["comment"]);
 }));
 
 test("simple mode: a spec draft that cannot go by itself is Open with Send to developers", (t) => open(t, HEAD_DESK(HEAD_ME, [slackDraft]), async (desk) => {
@@ -3860,14 +4186,14 @@ test("simple mode heads a change with its pull request, Approve and Turn into a 
   assert.match(await desk.textContent("#detail .sh-pr"), /#812 Draft/);
   assert.equal(await desk.getAttribute("#detail .sh-pr", "href"), "https://github.com/o/r/pull/812");
   assert.match(await desk.textContent("#detail .sh-line"), /dana-dev/);
-  assert.deepEqual(await desk.$$eval("#detail .sh-acts > .btn", (xs) => xs.map((x) => x.textContent.trim())), ["Approve"], "no Request changes on a change yet");
+  assert.deepEqual(await desk.$$eval("#detail .sh-acts > .btn", (xs) => xs.map((x) => x.textContent.trim())), ["Request changes", "Approve"], "a review asks for changes; Approve marks it handled");
   assert.deepEqual(await desk.$$eval("#detail .sh-more .menu > *", (xs) => xs.map((x) => x.textContent.trim())), ["Turn into a design request", "Open on GitHub ↗"]);
   await desk.click('#detail .sh-acts [data-handle="1"]');
   await desk.waitForFunction(() => posts.some((p) => /P-3/.test(p.path)));
 }));
 
-// Simple mode's page under the head (docs/desk-page.md → Simple mode): a short lead, the designs,
-// what Design Desk found, the long reads folded, then the comments in threads.
+// Simple mode's page under the head (docs/desk-page.md → Simple mode): a short lead, how it looks
+// today, the designs, what Design Desk found, the long reads folded, then the comments in threads.
 const talked = { ...drawn, id: "R-7", title: "Talked about", request: { problem: "First paragraph.\n\nSecond paragraph." },
   conflicts: [{ decision: "D-3", status: "active", text: "One primary button per screen.", why: "Two primaries." }],
   impact: { concept: "the limit", places: [{ where: "Usage", kind: "screen", how: "Shows the same limit." }] },
@@ -3883,7 +4209,8 @@ test("simple mode's request page: lead, designs, what Design Desk found, folds, 
   await desk.click('#list [data-card="R-7"]');
   await desk.waitForSelector("#detail .sthreads");
   const order = await desk.$$eval("#detail .slead, #detail .vtabs, #detail .sfound, #detail details.fold.big:not(.vpanel details), #detail .sthreads", (xs) => xs.map((x) => x.className.split(" ")[0] === "fold" ? x.querySelector("summary").textContent.trim() : x.className.split(" ").find((k) => ["slead", "vtabs", "sfound", "sthreads"].includes(k))));
-  assert.deepEqual(order, ["slead", "The request in full", "vtabs", "sfound", "Where else this shows up", "sthreads"]);
+  // How it looks today follows the request in full, before the designs (docs/desk-page.md → How it looks today).
+  assert.deepEqual(order, ["slead", "The request in full", "How it looks todayThe screen as it is in the product now, before any design.", "vtabs", "sfound", "Where else this shows up", "sthreads"]);
   assert.equal((await desk.textContent("#detail .slead")).trim(), "First paragraph.", "the lead is the first paragraph");
   assert.match(await desk.textContent("#detail .sfound"), /Goes against D-3/);
   assert.equal(await desk.locator("#detail .votes button.vote").count(), 0, "no vote buttons in simple mode");

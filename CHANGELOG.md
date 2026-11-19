@@ -7,6 +7,30 @@ why lives in the PR and commit history, not here. Consumed by the version check
 ([docs/persistence.md](docs/persistence.md) → **Definition version & upgrade**);
 authoring rules: [docs/self-modification.md](docs/self-modification.md) §12.
 
+## 1.103.0 — 2026-11-19
+
+**Upgrade:**
+1. Restart the Desk server ([desk.md](docs/desk.md) → Server), then republish the page
+   ([desk.md](docs/desk.md) → Publishing the page). The store takes:
+   - `now.elements`, `before_shots` and the `take-before` action, with a member's new `before`
+     ability: an element's dialog shows the part before and after, takes it from the product,
+     opens the design workspace at it, and comments on it ([requests.md](docs/requests.md) → The
+     part before, from the product);
+   - `now.shots`, pictures of a request's screen taken from the product with each shared part's
+     box, and a `now` with pictures alone: a request shows how it looks today in a section of its
+     own, and **Compare with today** sets each part and the whole screen beside it
+     ([desk-page.md](docs/desk-page.md) → How it looks today);
+   - `drafts` and `reviews`, both starting empty: people keep draft comments and send them as one
+     review with a verdict ([desk.md](docs/desk.md) → Reviews).
+2. Offer the operator `review_post` (default `disabled`): `enabled` posts a person's Desk review
+   of a pull request's change on that pull request, as a comment, with their name, from the
+   agent's account ([watch.md](docs/watch.md) → Reviews on GitHub). The step is the offer, never
+   the enabling.
+3. Nothing to migrate. From the next triage, Design Desk takes how a request's screen looks
+   today; a request triaged before keeps what it has, and its parts say there is no picture from
+   before until it is taken again. The next watch run's GitHub read records each pull request's
+   head commit.
+
 ## 1.102.0 — 2026-11-19
 
 **Upgrade:**

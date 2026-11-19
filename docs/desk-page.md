@@ -192,15 +192,27 @@ worklist does not need it; what a run does on the Desk is in [desk.md](desk.md).
   its severity), who filed it or wrote it and when (a person by their name on the roster, else the
   name the item keeps, else the part of their address before the @), and once approved one muted
   line — who approved it and when, the issue or pull request it was sent to, when it shipped —
-  then at most two buttons and ⋯. While it is Open, a request offers **Request changes** (with options drawn: a note
-  Design Desk draws the next version from, a change note) and **Approve** — which sends the spec
+  then at most two buttons and ⋯. While it is Open, a request offers **Request changes** (with options drawn) and **Approve** — which sends the spec
   as soon as it is written, with no box to tick, or, for one the Desk may not send by itself (a
   Slack origin, an open pull request; [handoff.md](handoff.md) → Review before it goes), leaves it
-  Open with **Send to developers** — and a change **Approve** (marks it handled); each only for
-  who may. ⋯ holds **Close…** or **Reopen** on a request, **Turn into a design request** on a
+  Open with **Send to developers** — and a change **Request changes** and **Approve** (marks it handled); each only for
+  who may. **Reviews** ([desk.md](desk.md) → Reviews): under the shown option, and under a change's
+  screens, a box offers **Add to review** — a draft, the viewer's alone — and **Comment now**, a
+  comment on the Desk at once (never on GitHub); the box at the end of the page posts at once. While
+  drafts wait, **Your review · n** under the head lists them, each with what it is about and ✕, and
+  **Send review…**; **Request changes** counts them (`Request changes · 2`) and is the primary
+  button, and **Approve** opens the review too. Both open one dialog: the drafts, the verdicts the
+  viewer may send (**Request changes**, **Approve**, **Comment only**, the one they pressed
+  picked) and a note for the whole review. Approving a request there is the usual approval first,
+  its own questions included, then the review. A sent review shows in Comments, in both modes, as
+  one block: who, the verdict (**Changes requested** amber, **Approved** green, **Comments**), when,
+  **On GitHub ↗** once posted, the note, then each of its comments with its replies. Full mode has
+  the same **Changes requested** line under the title, the same boxes, under the option shown and a change's Screens, and **Your review** at the top
+  of Questions and comments, whose **Send review…** opens the same dialog. ⋯ holds **Close…** or **Reopen** on a request, **Turn into a design request** on a
   change (and **Undo approval** on one approved), and **Open on GitHub** where there is a link. No vote buttons, rename or For Developers
   move. Under the head the page reads one way for both kinds: a short lead (a request's first
-  paragraph, a change's summary), **The request in full** folded, the designs (a request's
+  paragraph, a change's summary), **The request in full** folded, a request's **How it looks
+  today**, the designs (a request's
   options, votes as counts only) or **The changes** (a change's screens), **What Design Desk
   found** (the decisions in force it goes against, a change's reasons to look at it, how it
   differs from the approved design, Figma when on, its check holding the pull request; else
@@ -292,6 +304,57 @@ worklist does not need it; what a run does on the Desk is in [desk.md](desk.md).
   kind, who started it and their first words, then *done*; a click opens it with the option it is
   on, its jump to the part and Reopen. The order
   stays newest first.
+
+## How it looks today
+
+A request's screen as it is in the product (`now`, [requests.md](requests.md) → How it looks
+today), in a section of its own under what Design Desk found, before the design options:
+
+- It is **open while the request is in Checking** and folded at every later stage; a person's
+  own fold or unfold holds while the page is open. While Design Desk takes it, the section says
+  so; a checked request without one offers **Take how it looks today** to a member.
+- The screen, at full width of its column, with each of the request's parts (`shared_elements`)
+  outlined and numbered on it; beside it the same parts in a list, each cut on its own with
+  what the request needs of it. A part the product does not have yet is **Not in the product
+  today**. Several screens are tabs over the picture.
+- The line under the picture says where it comes from: "The product at main (<commit>), with
+  made-up data" for pictures taken from the product, shown first; "Redrawn from the code by
+  Design Desk" for the drawing, shown only when there are none.
+
+### Compare with today
+
+A switch, **Compare with today**, beside the **Design options** heading while the request has how
+it looks today: it is about every option, not the one shown. Off by default; it holds across
+options and requests while the page is open. On:
+
+- **All elements**: each tile shows the part **Today** beside the option's, an arrow between
+  them; a part the option adds shows **Not in the product today**. Over the tiles, how much of
+  today the option changes: *n changed*, *n new*, *n as today*, *n left out*.
+- **The design**: **◧ Slider** (the default) lays the option and today's drawing on one
+  another, a handle to drag between them; **⇆ Side by side** sets today on the left. With the
+  pictures from the product alone (no drawing), side by side is the only one.
+
+## The element dialog
+
+A part under **All elements** opens in one dialog, the same in simple and full mode:
+
+- **Before** beside **After**. After is the part as the option draws it. Before is the part as
+  it is in the product: its picture taken from Design Desk's copy of the product, else its box on
+  the screen taken from the product, else cut from the drawing of *how it looks today*; the line under it says which ("The product at main
+  (<commit>), with made-up data" or "Redrawn from the code by Design Desk", with when). A part
+  with neither says **No picture from before**; a part the option adds shows one picture,
+  **New**. Where both come from: [requests.md](requests.md) → The part before, from the product.
+- **Take it from the product** (**Take it again** once there is one) under Before: for members,
+  only while `screens` is enabled; Design Desk at work on it shows in its place.
+- A part cut live from a page is laid out at a desktop width (1440 px, as the product's pictures
+  are taken) and scaled into its box, so a narrow box never squeezes it; a part with no fill,
+  border or shadow of its own is fitted by what it holds. The tiles under All elements are drawn
+  the same way.
+- **Open in design workspace** opens the option with the part selected, on its Properties.
+- **Comments**: the part's open comments (a click opens one in the design workspace) and a box;
+  **Comment** adds one on the part at once, as **Just comment** does in the workspace. Not on a
+  closed request.
+- Its states follow, with the button that draws them.
 
 ## Product → Kit
 
@@ -393,7 +456,10 @@ person has seen an item is its bold title alone ([Read and unread](#read-and-unr
 at work on it included: the spinner says so), one approved whose spec draft waits for a person to send
 it, a change nobody marked handled that is not auto handled. **In dev** (the accent): it is
 approved and developers build it — a request writing its spec or sent to developers and not yet
-built, a change handled or auto handled whose pull request is not merged. **Closed**: nobody
+built, a change handled or auto handled whose pull request is not merged, and a change a review asked
+changes of until new commits arrive (its head says **Changes requested · developer**; a request a
+review asked changes of stays Open, its head saying **Changes requested · Design Desk**,
+[desk.md](desk.md) → Reviews). **Closed**: nobody
 works on it, and its pill says how it ended — **Shipped** (purple) a request built or a handled
 change merged, **No review needed** (grey) an auto handled change merged, **Closed** (red) a
 request closed, with a decision or without. An archived change, and anything on the other side,
@@ -432,6 +498,7 @@ private ask only its owner: Design Desk's answers to it are theirs alone, and fo
 | Feedback asked | a person hands the drawn options to the team (**Ask for feedback**); For you for every `developer` and `lead-developer` |
 | New decision, Decision revoked | a decision is added or revoked |
 | Developer asks, Marked done | a developer asks a design's designer, or marks it done ([Designs](#designs)) |
+| Review sent, New version | a person sends a review (on a pull request's change, For you for every `developer` and `lead-developer`); new commits arrive on a pull request a review asked changes of ([desk.md](desk.md) → Reviews) |
 
 Every row is at most three lines, each cut short with … when long, and says the same things in the same places: an icon and what happened, who (when known),
 how long ago, the item's kind in grey (Request:, PR change:, Decision: …), its title and number, and for a message or a vote one
