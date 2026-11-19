@@ -15,7 +15,7 @@ last backup (failed, missing, older than two days, or without `work/output` and 
 
 ## Judgment checks
 
-1. **Schedules** — `mcp__platform-outbound__list_schedules`: every `design-desk-*`
+1. **Schedules** — `mcp__platform-outbound__list_schedules`: every `xjacka-design-desk-*`
    schedule of `kit.yaml` exists, is enabled (or knowingly off), fires (`status.lastRun` within 1.5× the
    cron's interval) and match `kit.yaml`: task text, `precheck` on every schedule but the audit, none on the audit, `model` = `run_model` (none under `default`). Report drift; changing a
    schedule is the operator's call.
