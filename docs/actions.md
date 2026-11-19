@@ -54,7 +54,7 @@ A product's design profile names the skills it brings (`skills` in `profile.json
 
 | action | skill |
 | --- | --- |
-| options | dam-prototyper |
+| options | acme-prototyper |
 | deliver | file-issue |
 ```
 
@@ -65,7 +65,7 @@ missing and where to install it from.
 **A profile's skill is the operator's to allow.** It is installed only after the operator
 confirmed it in the direct session, from its `source` pinned to a commit, and the
 confirmation is the action's `## Skills` row with that pin in a third column
-(`| options | dam-prototyper | dam-agents/dam-prototyper@<sha> |`); never from a scheduled
+(`| options | acme-prototyper | acme/acme-prototyper@<sha> |`); never from a scheduled
 run. `design skill <action> --repo <repo>` enforces it: a profile's skill does the action
 only when that row names the same skill and its pin matches the profile's `source` (the same
 repository and, where the profile's `source` names a commit, the same commit). A profile's
@@ -109,7 +109,7 @@ A skill that replaces a bundled one keeps the action's contract:
 
 The operator can ask for any action in chat, in their own words, and steer it turn by turn:
 "show me options for #1420", "in option 2 make the empty state's button secondary", "what
-else shows the spend?", "build it", "send option 1 to Figma", "write the issue".
+else shows the monthly total?", "build it", "send option 1 to Figma", "write the issue".
 Pick the action, resolve its skill, do it, and show the result in the chat (an artifact link,
 a picture) **and** on the Desk: the request's card when there is one, a new request card when
 the work is a design change for the team to see, never a card for a one-off deliverable (a

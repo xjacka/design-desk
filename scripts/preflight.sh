@@ -848,7 +848,7 @@ audit_mode() {
     if [ -n "$DEC_BLOCKED" ]; then check decisions_page warn "the decisions page is not updated: $DEC_BLOCKED — $(if [ -f "$drec" ]; then echo "the page published before stays public at $(jq -r '.url // "?"' "$drec" 2>/dev/null) until the text is fixed on the Desk"; else echo "nothing is public yet"; fi) (docs/decisions-page.md)"
     elif [ "$(jq length <<<"$DEC_DUE")" -eq 0 ]; then check decisions_page ok "$(jq -r '.url // "no Desk store yet"' "$drec" 2>/dev/null || echo 'no Desk store yet')"
     elif [ -z "$dat" ]; then check decisions_page warn "decisions_page is dam but the page was never published — the issues run publishes it (docs/decisions-page.md)"
-    elif [ $((NOW_EPOCH - $(iso2epoch "$dat"))) -gt $((48 * 3600)) ]; then check decisions_page warn "the decisions page changed and was last published at $dat — is design-desk-issues-daily running?"
+    elif [ $((NOW_EPOCH - $(iso2epoch "$dat"))) -gt $((48 * 3600)) ]; then check decisions_page warn "the decisions page changed and was last published at $dat — is xjacka-design-desk-issues-daily running?"
     else check decisions_page ok "due today, last published $dat"; fi
   elif [ -f "$drec" ]; then check decisions_page warn "decisions_page is off but the page stays published at $(jq -r '.url // "?"' "$drec") — the operator deletes it"; fi
 

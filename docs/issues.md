@@ -49,8 +49,8 @@ Every entry carries the issue's `title`, `url`, `author`, `updated`, `bucket`,
    - `summary` — one sentence: the problem it solves; at most 180;
    - `needs` — one to three bullets of at most 200: what the UI will need (a new screen, a
      changed part, a new state, new words), naming screens as the product map does; a
-     need that makes the product work differently says so ("needs a developer: spend counted
-     per day, not per week"); plumbing such as a field or an endpoint is not called out
+     need that makes the product work differently says so ("needs a developer: totals counted
+     per week, not per month"); plumbing such as a field or an endpoint is not called out
      ([boundary.md](boundary.md) → What needs a developer);
    - `attention` — `{level, reasons}` as on a change card ([desk.md](desk.md) → Needs a
      designer): `developer` when the needs are small changes made of what the catalog already

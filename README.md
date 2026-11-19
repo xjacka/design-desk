@@ -3,8 +3,7 @@
 Design Desk is a design partner for a product team. It watches what ships in your product's
 screens and explains it to designers in plain words, then turns their ideas into variants,
 live prototypes on the real product, and specs for developers. It replaces the Designer kit
-and the DAM Prototyper and keeps what a design needs from them: mockups, walkthroughs, charts
-and copy.
+and keeps what a design needs from it: mockups, walkthroughs, charts and copy.
 
 | Who | Gets |
 | --- | --- |

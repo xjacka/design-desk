@@ -1,6 +1,6 @@
 # Monitor — the agent's health alerts
 
-Read on every **monitor run** (the `design-desk-monitor-15m` schedule). The work
+Read on every **monitor run** (the `xjacka-design-desk-monitor-15m` schedule). The work
 heartbeat decides work only; every health alert is the monitor's.
 `scripts/precheck.sh monitor` runs `scripts/monitor.sh` once per fire: local files only —
 the events log, ledgers, the Desk's inbox file — and one loopback call to the Desk server;

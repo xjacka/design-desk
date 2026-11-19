@@ -39,7 +39,7 @@ Source file `<slug>-walkthrough.src.html`:
 <head><meta charset="utf-8" /><title>What's new in 2.4</title><!-- design:css --></head>
 <body class="bg-background text-foreground">
   <!-- design:tour -->
-  <section data-step="1" data-step-title="Agents list">
+  <section data-step="1" data-step-title="Invoices list">
     …the real screen's header, sub-nav and surrounding fields, with the change inside…
     <span class="relative …">  <span data-pin="1"></span> …the element that changed… </span>
   </section>

@@ -81,7 +81,7 @@ A change card takes only the layers the reader acts on; an answer usually needs 
   the first time.
 - **No file paths** in "what" or "why". A path appears only where a developer will act on it,
   and is then labelled for them.
-- **Concrete over abstract.** "Owners did not notice an agent had stopped" beats "improves
+- **Concrete over abstract.** "Owners did not notice a payment had failed" beats "improves
   visibility". Numbers as digits with units.
 - **Short sentences.** One idea each, as you would say it to a colleague at their desk.
 - **Each thing once.** Leave out what a picture already shows and what only a developer needs
@@ -93,11 +93,11 @@ A change card takes only the layers the reader acts on; an answer usually needs 
 
 | Text | Not | But |
 | --- | --- | --- |
-| Summary under the title "See why an agent stopped" | "Adds the stop reason to the Agents list so people can see why an agent stopped." | "A stopped agent used to look like a sleeping one; its row now says why it stopped." |
-| A card's "why" bullet, its `source` "the issue #12" | "The issue that asked for this says that owners did not notice an agent had stopped." | "Owners did not notice an agent had stopped." |
-| Research | "Already asked for: none found. Where it lives: the Agents list. History: … In flight: nothing. Who to ask: nobody." | "Nothing is in the way: nobody asked for this before and nobody is changing it now. **Where it lives:** each row of the Agents list. **History:** the rows were spaced out in May to fit long names (PR #40)." |
-| Triage reason | "This requires changes to the spend aggregation logic in the backend." | "The product counts spend per week only. A daily bar needs it to count per day, and a developer decides that first." |
-| Answer | "Great question! The list is paginated through the API, which returns 50 records per request." | "The list shows 50 agents at a time; the rest appear as you scroll." |
+| Summary under the title "See why a payment failed" | "Adds the failure reason to the Invoices list so people can see why a payment failed." | "A failed payment used to look like a pending one; its row now says why it failed." |
+| A card's "why" bullet, its `source` "the issue #12" | "The issue that asked for this says that owners did not notice a payment had failed." | "Owners did not notice a payment had failed." |
+| Research | "Already asked for: none found. Where it lives: the Invoices list. History: … In flight: nothing. Who to ask: nobody." | "Nothing is in the way: nobody asked for this before and nobody is changing it now. **Where it lives:** each row of the Invoices list. **History:** the rows were spaced out in May to fit long customer names (PR #40)." |
+| Triage reason | "This requires changes to the totals aggregation logic in the backend." | "The product totals invoices per month only. A weekly bar needs it to total per week, and a developer decides that first." |
+| Answer | "Great question! The list is paginated through the API, which returns 50 records per request." | "The list shows 50 invoices at a time; the rest appear as you scroll." |
 | A reason a designer should look | "a missing state"; "feels crowded" | "The approved design shows an empty list; the change shows nothing at all" |
 
 ## Grounding — never invent a reason
