@@ -11,7 +11,7 @@ Reading order for a run:
 2. The `docs/` file the work at hand needs — `CLAUDE.md` → **Map of `docs/`** says which
    one and when. Never read them all up front.
 3. **[`ONBOARDING.md`](ONBOARDING.md)** — only on a fresh instance that has no
-   `$HOME/.design-desk-onboarded` sentinel.
+   `$HOME/.xjacka-design-desk-onboarded` sentinel.
 
 This file is a pointer, not a copy: it carries no rules of its own, and nothing here
 overrides `CLAUDE.md`. A harness that starts inside `work/` finds the same pointer at

@@ -10,20 +10,20 @@ profile** (`.design-desk/<profile>/` in its repository, [docs/profile.md](docs/p
 never hard-code a product, a repository, a person or a screen in this definition.
 
 **First-run onboarding:** a fresh agent initializes once by following
-[`ONBOARDING.md`](ONBOARDING.md) (self-guarded by the `$HOME/.design-desk-onboarded`
+[`ONBOARDING.md`](ONBOARDING.md) (self-guarded by the `$HOME/.xjacka-design-desk-onboarded`
 sentinel). Normal runs skip straight to the run types below.
 
 ## Run types
 
 | Run type | Trigger | Entry command (only without a worklist path in the prompt) |
 | --- | --- | --- |
-| **Watch run** | hourly (`design-desk-watch-hourly`) | `bash "$HOME/scripts/preflight.sh" watch` |
-| **Inbox run** | every 10 minutes (`design-desk-inbox-10m`), and a Desk ping | `bash "$HOME/scripts/preflight.sh" inbox` |
+| **Watch run** | hourly (`xjacka-design-desk-watch-hourly`) | `bash "$HOME/scripts/preflight.sh" watch` |
+| **Inbox run** | every 10 minutes (`xjacka-design-desk-inbox-10m`), and a Desk ping | `bash "$HOME/scripts/preflight.sh" inbox` |
 | **Request run** | the operator in chat, a Slack message | — ([docs/requests.md](docs/requests.md) → Chat and Slack) |
 | **Bug report** | a Slack message about something wrong on a screen | — (the `bug-intake` action, [docs/actions.md](docs/actions.md)) |
 | **Monitor run** | every 15 minutes | `bash "$HOME/scripts/monitor.sh"` — [docs/monitor.md](docs/monitor.md) |
-| **Issues run** | daily (`design-desk-issues-daily`) | `bash "$HOME/scripts/preflight.sh" issues` — [docs/issues.md](docs/issues.md) |
-| **Digest run** | Thursday morning, weekly (`design-desk-digest-weekly`) | `bash "$HOME/scripts/preflight.sh" digest` — [docs/digest.md](docs/digest.md) |
+| **Issues run** | daily (`xjacka-design-desk-issues-daily`) | `bash "$HOME/scripts/preflight.sh" issues` — [docs/issues.md](docs/issues.md) |
+| **Digest run** | Thursday morning, weekly (`xjacka-design-desk-digest-weekly`) | `bash "$HOME/scripts/preflight.sh" digest` — [docs/digest.md](docs/digest.md) |
 | **Audit run** | Friday morning, weekly (ungated) | `bash "$HOME/scripts/preflight.sh" audit` |
 
 Scheduled sessions run on `run_model`. A gated run echoes its logs, dispatches, renames
