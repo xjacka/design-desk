@@ -4,7 +4,7 @@
 # same commit. Every schedule's task text is copied verbatim from ONBOARDING.md, the
 # source of truth.
 schemaVersion: v1
-id: design-desk
+id: xjacka-design-desk
 name: Design Desk
 tagline: A design partner that explains what shipped and prototypes what's next.
 description: >-
@@ -32,7 +32,7 @@ description: >-
 category: productivity
 icon: paint-brush
 avatar: spark
-docsUrl: https://github.com/dam-agents/design-desk#readme
+docsUrl: https://github.com/xjacka/design-desk#readme
 harnesses: [claude-code]
 
 # `self` is this repository, at the commit the kit was resolved at. Into $HOME, so
