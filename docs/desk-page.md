@@ -315,7 +315,7 @@ mode only: simple mode shows neither this section nor **Compare with today**, an
 
 - It is **open while the request is in Checking** and folded at every later stage; a person's
   own fold or unfold holds while the page is open. While Design Desk takes it, the section says
-  so; a checked request without one offers **Take how it looks today** to a member.
+  so; a checked request without one offers **Take how it looks today** to a person who may start options.
 - The screen, at full width of its column, with each of the request's parts (`shared_elements`)
   outlined and numbered on it; beside it the same parts in a list, each cut on its own with
   what the request needs of it. A part the product does not have yet is **Not in the product
