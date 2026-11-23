@@ -3762,6 +3762,7 @@ test("how it looks today is a section of its own, open while the request is chec
   if (!run) return;
   const { desk } = run;
   try {
+    await desk.click('[data-tab="requests"]');
     await desk.click('[data-card="r7"]');
     await desk.waitForSelector('#detail details[data-sect="today"][open] .today-shot svg image[href]');
     const today = await desk.textContent('#detail [data-sect="today"]');
@@ -3780,6 +3781,7 @@ test("Compare with today sets each part and the whole screen beside how it looks
   if (!run) return;
   const { desk } = run;
   try {
+    await desk.click('[data-tab="requests"]');
     await desk.click('[data-card="r7"]');
     await desk.waitForSelector("#detail .eltile");
     assert.equal(await desk.locator('#detail details[data-sect="today"][open]').count(), 0, "folded past Checking");
