@@ -3724,7 +3724,7 @@ test("Product → Kit is not on the page for a PM", (t) => open(t, withKit({ ...
 const BEFORE_PAGE = `<!doctype html><html><body><div data-view="1" data-view-name="Agents"><div id="card" style="width:300px;height:80px;background:#36c">Agent</div><p id="label">Limit</p><p id="added">New</p></div></body></html>`;
 const NOW_PAGE = `<!doctype html><html><body><div data-view="1"><div id="card" style="width:300px;height:80px;background:#999">Agent today</div><p id="label">Limit today</p></div></body></html>`;
 const SHOT = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="20"><rect width="40" height="20" fill="#000"/></svg>`;
-const bridgeToday = ({ me = 'role: "designer", email: "alice@example.com", screens: true, can: { comment: true, change: true } }' } = {}) => `<script>
+const bridgeToday = ({ me = 'role: "designer", email: "alice@example.com", screens: true, can: { comment: true, change: true }' } = {}) => `<script>
 window.calls = [];
 const at = new Date().toISOString();
 const request = { id: "r7", kind: "request", title: "Agent card", status: "feedback", created: at, triage: { verdict: "design", reasons: [] }, prototype: { state: "none" },
