@@ -638,6 +638,10 @@ export class Store {
     return { ...c, conflicts, cited, attention: this.attentionOf(c), ...(["request", "change", "issue"].includes(c.kind) ? { for: this.forOf(c) } : {}), ...(c.kind === "request" ? { from_pr: this.fromPr(c) } : {}), designed: this.designedOf(c), sent_card: this.sentCardOf(c), builds: this.buildsOf(c), threads: (c.threads || []).map((t) => this.db.threads[t]).filter((t) => sees(t, viewer)), waiting: this.waitingFor(c.id, viewer) };
   }
 
+  // The ids of a request's shared parts (docs/requests.md → The same elements in every option). The
+  // upsert sets shared_elements before now (AGENT_FIELDS' order), so this is the list it leaves.
+  sharedIds(next) { return new Set((next.shared_elements || []).map((s) => s.id)); }
+
   // Work the agent has been asked for on a card and not finished, oldest first.
   waitingFor(cardId, viewer) {
     const usual = (i) => { const m = this.usualMinutes(i); return m ? { usual_min: m } : {}; };
@@ -1195,7 +1199,7 @@ export class Store {
       const picked = [...new Set(carry.map(String))];
       const vs = picked.map((vid) => (source.variants || []).find((v) => v.id === vid) || (() => { throw bad(`${source.id} has no option ${vid}`); })());
       c.variants = vs.map((v) => ({ id: v.id, name: v.name, purpose: v.purpose, rationale: v.rationale, fidelity: v.fidelity, asset: v.asset, figma_url: v.figma_url || null,
-        stories: v.stories || null, reasons: v.reasons || null, states: structuredClone(v.states || []), elements: structuredClone(v.elements || []), version: 1,
+        stories: v.stories || null, reasons: v.reasons || null, states: structuredClone(v.states || []), elements: structuredClone(v.elements || []), left_out: structuredClone(v.left_out || []), version: 1,
         carried: { card: source.id, variant: v.id, version: v.version || 1 } }));
       request.carry = c.variants.map((v) => v.id);
       // Carried options are changed right after triage, as new ones would be drawn.
@@ -2112,7 +2116,7 @@ export class Store {
   // request). Only the listed fields are the agent's; people's acks, votes and threads
   // are never overwritten.
   upsertCard(fields) {
-    const AGENT_FIELDS = ["title", "summary", "sections", "screens", "source", "status", "triage", "variants", "prototype", "spec", "labels", "sheet", "states", "group", "elements", "research", "brief", "origin", "impact", "instance", "environment", "shotlist", "path", "how", "concepts", "changes", "period", "attention", "bucket", "needs", "sketches", "style", "draw", "issue_brief", "grill", "decisions", "conflicts", "design_check", "decision_check", "figma_check", "figma_search", "dev_summary", "ci", "now", "area", "fix", "reminded", "translation"];
+    const AGENT_FIELDS = ["title", "summary", "sections", "screens", "source", "status", "triage", "variants", "prototype", "spec", "labels", "sheet", "states", "group", "elements", "shared_elements", "research", "brief", "origin", "impact", "instance", "environment", "shotlist", "path", "how", "concepts", "changes", "period", "attention", "bucket", "needs", "sketches", "style", "draw", "issue_brief", "grill", "decisions", "conflicts", "design_check", "decision_check", "figma_check", "figma_search", "dev_summary", "ci", "now", "area", "fix", "reminded", "translation"];
     let c = fields.id ? own(this.db.cards, fields.id) : null, goneLive = null;
     if (fields.id && !c) throw missing(`no card ${fields.id}`);
     if (!c && !["change", "request", "element", "screen", "digest", "issue"].includes(fields.kind)) throw bad("a new card needs kind change, request, element, screen, digest or issue");
@@ -2249,13 +2253,33 @@ export class Store {
       // The screen as it is in the product today, drawn like an option, to set beside one (docs/requests.md → How it looks today).
       else if (k === "now") {
         if (next.kind !== "request") throw bad("now belongs to a request");
-        if (fields.now !== null && !own(this.db.assets, fields.now?.asset)) throw bad(`now: no asset ${fields.now?.asset}`);
-        next.now = fields.now === null ? null : { asset: fields.now.asset, name: optText(fields.now.name, 80, "now name") || null, at: this.clock() };
+        // The drawing (an HTML page like an option's), the pictures taken from the product
+        // (`shots`), or both: at least one of them.
+        const n = fields.now, was = next.now;
+        if (n !== null && (typeof n !== "object" || Array.isArray(n))) throw bad("now is an object, or null");
+        if (n && n.asset != null && !own(this.db.assets, n.asset)) throw bad(`now: no asset ${n.asset}`);
+        // Where each of the request's shared parts sits in the drawing, so it is cut out as it is
+        // today: kept while the drawing is the same, gone with a new one.
+        const same = was && n && (was.asset || null) === (n.asset || null);
+        const els = n && n.elements !== undefined ? cleanNowElements(n.elements, this.sharedIds(next))
+          : same && was.elements?.length ? was.elements : null;
+        // The screen taken from the product, with where each shared part is on it: kept until sent anew.
+        const shots = n && n.shots !== undefined ? cleanNowShots(n.shots, this.sharedIds(next), this.db.assets) : was?.shots?.length ? was.shots : null;
+        if (n && !n.asset && !shots?.length) throw bad("now needs its drawing (asset), its pictures from the product (shots), or both");
+        next.now = n === null ? null : { ...(n.asset ? { asset: own(this.db.assets, n.asset).id } : {}), name: optText(n.name, 80, "now name") || null, at: this.clock(), ...(els?.length ? { elements: els } : {}), ...(shots?.length ? { shots } : {}) };
       }
       else if (k === "sheet") { if (fields.sheet !== null && !own(this.db.assets, fields.sheet)) throw bad(`sheet: no asset ${fields.sheet}`); next.sheet = fields.sheet; }
       else if (k === "states") next.states = cleanStates(fields.states);
       else if (k === "group") next.group = clean(fields.group, 60, "group");
       else if (k === "elements") { if (!Array.isArray(fields.elements)) throw bad("elements must be a list"); next.elements = fields.elements.slice(0, 30).map((id) => this.card(String(id)).id); }
+      else if (k === "shared_elements") {
+        if (next.kind !== "request") throw bad("shared_elements belong to a request");
+        next.shared_elements = cleanSharedElements(fields.shared_elements);
+        // A part off the list takes its place in how it looks today with it.
+        const ids = new Set(next.shared_elements.map((x) => x.id));
+        if (next.now?.elements) next.now = { ...next.now, elements: next.now.elements.filter((x) => ids.has(x.id)) };
+        if (next.now?.shots) next.now = { ...next.now, shots: next.now.shots.map((x) => ({ ...x, parts: x.parts.filter((p) => ids.has(p.id)) })) };
+      }
       else if (k === "research") next.research = cleanResearch(fields.research, this.db.assets, this.db);
       else if (k === "origin") next.origin = cleanOrigin(fields.origin, this.db.cards);
       else if (k === "brief") {
@@ -2284,6 +2308,9 @@ export class Store {
     if (waits && !c?.spec?.sent && ((fields.spec !== undefined && next.spec && (next.spec.review === "sent" || next.spec.sent)) || (next.status === "handed-off" && c?.status !== "handed-off")))
       throw bad("a request from Slack or from an open pull request waits for a person's Send to developers: write its spec with review \"draft\", and hand it off only after that send (docs/handoff.md step 3)");
     if (!next.title) throw bad("a card needs a title");
+    // Every option of a request shows the request's elements, or says why not (docs/requests.md → The same elements in every option).
+    if (next.kind === "request" && next.shared_elements?.length && (fields.variants !== undefined || fields.shared_elements !== undefined))
+      next.variants = (next.variants || []).map((v, i) => alignOption(v, next.shared_elements, i + 1));
     // One card per screen and per element: a card a person added that turns out to be one
     // already on the Desk is dropped with a pointer to it, never filled in as a second copy.
     const twin = next.status !== "dropped" && Object.values(this.db.cards).find((x) => x.id !== next.id && x.kind === next.kind && x.status !== "dropped"
@@ -3092,7 +3119,7 @@ function versioned(list, before, at, removed = []) {
     const alternatives = given.alternatives ? given.alternatives.map((x) => ({ ...x, of: now, drawn: at })) : old && old.asset === given.asset ? old.alternatives || [] : [];
     // A person's own option keeps who added it through every run's upsert.
     // An option carried over from an approved request keeps saying so through every version.
-    const v = { ...given, ...(old?.by ? { by: old.by } : {}), ...(old?.carried ? { carried: old.carried } : {}), stories: given.stories || old?.stories || null, reasons: given.reasons || old?.reasons || null, elements: given.elements ?? old?.elements ?? [], states: versionedStates(given.states ?? old?.states ?? [], old?.states || [], at, now, was, given.name || given.id), alternatives };
+    const v = { ...given, ...(old?.by ? { by: old.by } : {}), ...(old?.carried ? { carried: old.carried } : {}), stories: given.stories || old?.stories || null, reasons: given.reasons || old?.reasons || null, elements: given.elements ?? old?.elements ?? [], left_out: given.left_out ?? old?.left_out ?? [], states: versionedStates(given.states ?? old?.states ?? [], old?.states || [], at, now, was, given.name || given.id), alternatives };
     if (!old) return { ...v, version: 1, history: [], drawn: at };
     const figma = v.figma_url || old.figma_url || null;
     if (old.asset === v.asset) return { ...v, version: was, history: old.history || [], drawn: old.drawn || at, figma_url: figma };
@@ -3441,7 +3468,9 @@ function cleanVariants(list, assets, decisions = {}, before = [], cards = {}) {
       // Leaving `states` out keeps the option's states from before; [] removes them.
       ...(v.states === undefined ? {} : { states: cleanOptionStates(v.states, assets, i + 1) }),
       // Leaving `elements` out keeps the option's elements from before; [] removes them.
+      // Its exceptions (`left_out`) go with it: sent alone they replace the ones from before; elements sent without them clear them.
       ...(v.elements === undefined ? {} : { elements: cleanOptionElements(v.elements, assets, cards, i + 1) }),
+      ...(v.left_out !== undefined ? { left_out: cleanLeftOut(v.left_out, i + 1) } : v.elements !== undefined ? { left_out: [] } : {}),
       // Leaving `alternatives` out keeps the ones from before while the option is unchanged.
       ...(v.alternatives === undefined ? {} : { alternatives: cleanAlternatives(v.alternatives, assets, i + 1) }),
     };
@@ -3491,8 +3520,100 @@ function cleanOptionElements(list, assets, cards, n) {
     if (of && (own(cards, of)?.kind !== "element" || own(cards, of).design)) throw bad(`variant ${n}, element ${i + 1}: ${of} is not an element of the product`);
     return { id, name: clean(x.name, 80, "element name"), change: x.change, how: optText(x.how, 300, "how"), selector, shot: x.shot ?? null,
       ...(x.view ? { view: String(x.view).slice(0, 40), view_name: optText(x.view_name, 120, "view name") } : {}), element: of,
-      ...(x.controls == null ? {} : { controls: cleanControls(x.controls, selector, `variant ${n}, element ${i + 1}`) }) };
+      ...(x.controls == null ? {} : { controls: cleanControls(x.controls, selector, `variant ${n}, element ${i + 1}`) }),
+      ...(x.only_here == null || x.only_here === "" ? {} : { only_here: clean(x.only_here, 300, "why only this option has it") }) };
   });
+}
+
+// The same elements in every option (docs/requests.md): the parts the request's brief touches,
+// each drawn by every option of it, in this order and under these names.
+function cleanSharedElements(list) {
+  if (list === null) return [];
+  if (!Array.isArray(list) || list.length > LIMITS.optionElements) throw bad(`shared_elements is a list of at most ${LIMITS.optionElements}`);
+  const ids = new Set();
+  return list.map((x, i) => {
+    const id = String(x?.id || "");
+    if (!STATE_ID.test(id) || ids.has(id)) throw bad(`shared element ${i + 1}: its id must be short and its own`);
+    ids.add(id);
+    return { id, name: clean(x?.name, 80, "element name"), how: optText(x?.how, 300, "how") };
+  });
+}
+// Where each of a request's shared parts sits in its "how it looks today" drawing (`now.elements`).
+function cleanNowElements(list, shared) {
+  if (list === null) return [];
+  if (!Array.isArray(list) || list.length > LIMITS.optionElements) throw bad(`now.elements is a list of at most ${LIMITS.optionElements}`);
+  const ids = new Set();
+  return list.map((x, i) => {
+    const id = String(x?.id || "");
+    if (!shared.has(id)) throw bad(`now.elements ${i + 1}: ${id || "its id"} is not one of the request's shared_elements`);
+    if (ids.has(id)) throw bad(`now.elements ${i + 1}: ${id} is there twice`);
+    ids.add(id);
+    // A view as an option's element names one: its number, as text.
+    const view = x?.view === undefined || x?.view === null || x?.view === "" ? null : String(x.view);
+    if (view !== null && !/^\d{1,4}$/.test(view)) throw bad(`now.elements ${i + 1}: view is a number`);
+    return { id, selector: clean(x?.selector, 500, "selector"), view, view_name: optText(x?.view_name, 80, "view_name") || null };
+  });
+}
+
+// The screen a request changes as it is in the product (`now.shots`): each a picture taken on
+// Design Desk's own copy of it, with the box of each shared part on it, in the picture's pixels
+// (docs/requests.md → How it looks today).
+function cleanNowShots(list, shared, assets) {
+  if (list === null) return [];
+  if (!Array.isArray(list) || list.length > 6) throw bad("now.shots is a list of at most 6");
+  const px = (v, max, what) => { if (!Number.isInteger(v) || v < 0 || v > max) throw bad(`${what} is a whole number from 0 to ${max}`); return v; };
+  return list.map((x, i) => {
+    const at = `now.shots ${i + 1}`, a = own(assets, x?.asset);
+    if (!a || !String(a.contentType).startsWith("image/")) throw bad(`${at}: ${x?.asset} is not a picture on the Desk`);
+    const commit = String(x?.commit || "").toLowerCase();
+    if (!/^[0-9a-f]{7,40}$/.test(commit)) throw bad(`${at}: commit is the product's commit, 7 to 40 hex characters`);
+    const width = px(x?.width, 20000, `${at}: width`), height = px(x?.height, 40000, `${at}: height`);
+    if (!width || !height) throw bad(`${at}: width and height are the picture's size in pixels`);
+    const parts = x?.parts == null ? [] : x.parts;
+    if (!Array.isArray(parts) || parts.length > LIMITS.optionElements) throw bad(`${at}: parts is a list of at most ${LIMITS.optionElements}`);
+    const ids = new Set();
+    return { asset: a.id, name: optText(x?.name, 80, `${at} name`) || null, ref: clean(x?.ref, 80, "ref"), commit, width, height,
+      parts: parts.map((p, k) => {
+        const id = String(p?.id || ""), w = `${at}, part ${k + 1}`;
+        if (!shared.has(id)) throw bad(`${w}: ${id || "its id"} is not one of the request's shared_elements`);
+        if (ids.has(id)) throw bad(`${w}: ${id} is there twice`);
+        ids.add(id);
+        const bx = px(p?.x, width, `${w}: x`), by = px(p?.y, height, `${w}: y`), bw = px(p?.w, width - bx, `${w}: w`), bh = px(p?.h, height - by, `${w}: h`);
+        if (!bw || !bh) throw bad(`${w}: w and h are the part's size on the picture`);
+        return { id, x: bx, y: by, w: bw, h: bh };
+      }) };
+  });
+}
+
+// The request's elements an option leaves out, each with why: the exception, said out loud.
+function cleanLeftOut(list, n) {
+  if (list == null) return [];
+  if (!Array.isArray(list) || list.length > LIMITS.optionElements) throw bad(`variant ${n}: left_out is a list of at most ${LIMITS.optionElements}`);
+  const ids = new Set();
+  return list.map((x, i) => {
+    const id = String(x?.id || "");
+    if (!STATE_ID.test(id) || ids.has(id)) throw bad(`variant ${n}, left_out ${i + 1}: the id of one of the request's shared elements, once`);
+    ids.add(id);
+    return { id, why: clean(x?.why, 300, "why it is left out") };
+  });
+}
+// An option against the request's elements: each one drawn (its name the request's, in the
+// request's order) or left out with why, and a part only this option has says why, after them.
+// Exempt: a person's own picture, and an option that lists no elements at all (drawn before).
+function alignOption(v, shared, n) {
+  const els = v.elements || [], out = v.left_out || [];
+  if (v.fidelity === "picture" || (!els.length && !out.length)) return v;
+  const byId = new Map(els.map((e) => [e.id, e])), of = new Map(shared.map((s) => [s.id, s]));
+  const at = `variant ${n} (${v.name})`;
+  for (const e of els) if (!of.has(e.id) && !e.only_here) throw bad(`${at}: ${e.id} (${e.name}) is not one of the request's elements (${[...of.keys()].join(", ")}): use the id of the one it is, or say why only this option has it (only_here)`);
+  for (const x of out) {
+    if (!of.has(x.id)) throw bad(`${at}: left_out ${x.id} is not one of the request's elements`);
+    if (byId.has(x.id)) throw bad(`${at}: ${x.id} is both drawn and left out`);
+  }
+  const missing = shared.filter((s) => !byId.has(s.id) && !out.some((x) => x.id === s.id));
+  if (missing.length) throw bad(`${at}: the request's ${missing.map((s) => `${s.id} (${s.name})`).join(", ")} ${missing.length > 1 ? "are" : "is"} not in this option: draw ${missing.length > 1 ? "them" : "it"}, or say why ${missing.length > 1 ? "they are" : "it is"} left out (left_out: [{id, why}])`);
+  const drawn = shared.filter((s) => byId.has(s.id)).map((s) => { const { only_here: _, ...e } = byId.get(s.id); return { ...e, name: s.name }; });
+  return { ...v, elements: [...drawn, ...els.filter((e) => !of.has(e.id))], left_out: shared.flatMap((s) => out.filter((x) => x.id === s.id)) };
 }
 
 // An element's smart controls (docs/requests.md → Smart controls): the choices its product

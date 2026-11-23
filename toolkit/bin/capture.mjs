@@ -10,6 +10,10 @@
 //                {"wait": "<selector>" | ms}, {"scroll": "<selector>"}. Selectors are Playwright's:
 //                CSS, `text=…`, `role=button[name="…"]`. A step that fails shoots where it stopped
 //                (`<shot>-stuck.jpg`) and reports the step, and the next shot starts from `setup`.
+//                A shot with `"parts": {"<id>": "<selector>", …}` also prints the picture's `width`
+//                and `height` and each part's box on it (`parts: [{id, x, y, w, h}]`, in the picture's
+//                pixels; one not shown goes under `missing`): the screen as it is today, its parts
+//                marked on the Desk (docs/requests.md → How it looks today).
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ensureDir, fail, launch } from "../lib/core.mjs";
@@ -89,6 +93,29 @@ async function step(pg, st, { url, base }) {
   else throw new Error(`unknown step ${kind}`);
 }
 
+// Where each named part is on a whole-screen shot just taken, in the picture's pixels: the window
+// (or the whole page for a `full` shot), cut to its edges. A part not on the page, not shown or
+// wholly outside the picture is listed as missing.
+export async function partBoxes(pg, parts, full) {
+  const m = await pg.evaluate(({ parts, full }) => {
+    const W = full ? document.documentElement.scrollWidth : innerWidth, H = full ? document.documentElement.scrollHeight : innerHeight;
+    const ox = full ? scrollX : 0, oy = full ? scrollY : 0;
+    const boxes = [], missing = [];
+    for (const [id, sel] of Object.entries(parts)) {
+      let e = null; try { e = document.querySelector(String(sel)); } catch {}
+      const r = e?.getBoundingClientRect(), st = e && getComputedStyle(e);
+      if (!r || !r.width || !r.height || st.visibility === "hidden" || st.display === "none") { missing.push(id); continue; }
+      const x = Math.max(0, r.left + ox), y = Math.max(0, r.top + oy), x2 = Math.min(W, r.right + ox), y2 = Math.min(H, r.bottom + oy);
+      if (x2 <= x || y2 <= y) { missing.push(id); continue; }
+      boxes.push({ id, x, y, w: x2 - x, h: y2 - y });
+    }
+    return { W, H, dpr: devicePixelRatio, boxes, missing };
+  }, { parts, full });
+  const k = m.dpr || 1, px = (v) => Math.round(v * k);
+  return { width: px(m.W), height: px(m.H), parts: m.boxes.map((b) => ({ id: b.id, x: px(b.x), y: px(b.y), w: px(b.w), h: px(b.h) })), ...(m.missing.length ? { missing: m.missing } : {}) };
+}
+
+
 async function followRecipe(pg, recipe, ctx) {
   const run = async (steps, label) => { for (const [i, st] of (steps || []).entries()) { try { await step(pg, st, ctx); } catch (e) { e.at = `${label} step ${i + 1} (${JSON.stringify(st).slice(0, 120)})`; throw e; } } };
   const setup = async () => run(recipe.setup, "setup");
@@ -104,7 +131,8 @@ async function followRecipe(pg, recipe, ctx) {
         await pg.waitForTimeout(300);
         const file = join(ctx.out, `${slug(name)}${theme === "dark" ? "-dark" : ""}.jpg`);
         await pg.screenshot({ path: file, type: "jpeg", quality: 80, fullPage: Boolean(shot.full) });
-        console.log(JSON.stringify({ name, theme, file, url: pg.url() }));
+        const marked = shot.parts && typeof shot.parts === "object" ? await partBoxes(pg, shot.parts, Boolean(shot.full)) : {};
+        console.log(JSON.stringify({ name, theme, file, url: pg.url(), ...marked }));
       }
       await pg.emulateMedia({ colorScheme: "light" });
     } catch (e) {
