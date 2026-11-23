@@ -392,11 +392,64 @@
   .eltile:hover { border-color: var(--accent); }
   .eltile .elopen { display: grid; grid-template-rows: auto auto 1fr; gap: 8px; text-align: left; padding: 8px; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; min-width: 0; }
   .eltile .elcat { padding: 0 8px 8px; } .eltile .elcat .anchor { font-size: var(--fs-meta); }
-  .eltile .elpic { display: block; height: 192px; padding: 12px; box-sizing: border-box; overflow: hidden; border-radius: var(--r-sm); background: #fff; border: 1px solid var(--line); }
+  .eltile .elpic { position: relative; display: block; height: 192px; padding: 12px; box-sizing: border-box; overflow: hidden; border-radius: var(--r-sm); background: #fff; border: 1px solid var(--line); }
   .eltile .elpic img { width: 100%; height: 100%; object-fit: contain; display: block; }
   .eltile .elpic iframe { width: 100%; height: 100%; border: 0; display: block; pointer-events: none; }
   .eltile .elname { font-weight: 600; font-size: var(--fs-ui); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .eltile .elmeta { display: flex; flex-wrap: wrap; gap: 4px; align-self: end; }
+  /* A part of the request this option leaves out keeps its place, so the options line up. */
+  .eltile.elgap { border-style: dashed; background: none; }
+  .eltile.elgap:hover { border-color: var(--line); }
+  .eltile.elgap .elopen { cursor: default; }
+  .eltile.elgap .elpic { display: grid; place-items: center; background: none; border-style: dashed; color: var(--muted); }
+  .eltile .elwhy { font-size: var(--fs-meta); color: var(--muted); }
+  /* Compare with today: a tile shows its part as it is today beside the option's. */
+  .eltile .elpic.ba { display: grid; grid-template-columns: minmax(0, 1fr) 18px minmax(0, 1fr); align-items: stretch; padding: 0; background: none; border: 0; gap: 0; }
+  .eltile .elpic.ba .bah { position: relative; display: grid; grid-template-rows: auto 1fr; gap: 4px; min-width: 0; }
+  .eltile .elpic.ba .bal { font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+  .eltile .elpic.ba .bap { position: relative; overflow: hidden; border-radius: var(--r-sm); background: #fff; border: 1px solid var(--line); padding: 8px; box-sizing: border-box; min-height: 0; }
+  .eltile .elpic.ba .bap.none { display: grid; place-items: center; text-align: center; background: none; border-style: dashed; color: var(--muted); font-size: var(--fs-meta); padding: 8px; }
+  .eltile .elpic.ba .bap.same { opacity: .55; }
+  .eltile .elpic.ba .arr { display: grid; place-items: center; color: var(--muted); font-size: var(--fs-meta); padding-top: 16px; }
+  .eltile .elhow { font-size: var(--fs-meta); color: var(--muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .elsum { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 12px; }
+  /* How it looks today: the screen the request changes as it is in the product, its parts numbered on it. */
+  .today-wrap { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .today-wrap { grid-template-columns: minmax(0, 1fr); } }
+  .today-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin: 0 0 8px; }
+  .today-tabs button { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 2px 12px; font: inherit; font-size: var(--fs-meta); cursor: pointer; color: var(--muted); }
+  .today-tabs button[aria-pressed="true"] { border-color: var(--ink); color: var(--ink); }
+  .today-shot { position: relative; aspect-ratio: 1440 / 900; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; cursor: zoom-in; }
+  .today-shot.pic { aspect-ratio: auto; max-height: 70vh; }
+  .today-shot svg, .today-parts .tp svg, .eltile .elpic.ba .bap svg { display: block; width: 100%; height: 100%; }
+  .today-frame { overflow: auto; padding: 0; } .today-frame img { display: block; width: 100%; height: auto; }
+  .today-shot iframe { position: absolute; left: 0; top: 0; width: 1440px; height: 900px; border: 0; transform-origin: 0 0; pointer-events: none; }
+  .today-from { font-size: var(--fs-meta); color: var(--muted); margin: 8px 0 0; }
+  .today-parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .today-parts li { display: grid; grid-template-columns: 22px 112px minmax(0, 1fr); gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); padding: 8px; }
+  .today-parts .tn { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: #e5484d; color: #fff; font-size: var(--fs-micro); font-weight: 600; }
+  .today-parts li.missing .tn { background: var(--muted); }
+  .today-parts .tp { position: relative; height: 64px; overflow: hidden; border-radius: var(--r-sm); background: #fff; border: 1px solid var(--line); padding: 4px; box-sizing: border-box; }
+  .today-parts .tp img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .today-parts .tp iframe { width: 100%; height: 100%; border: 0; display: block; pointer-events: none; }
+  .today-parts li.missing .tp { display: grid; place-items: center; background: none; border-style: dashed; color: var(--muted); font-size: var(--fs-micro); text-align: center; }
+  .today-parts .tt b { display: block; font-size: var(--fs-ui); } .today-parts .tt span { font-size: var(--fs-meta); color: var(--muted); line-height: 1.4; }
+  /* Compare with today: the option beside today, or one picture with a handle that slides between them. */
+  .cmpbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 8px; font-size: var(--fs-meta); color: var(--muted); }
+  .cmptog { margin: 0 auto 0 0; display: inline-flex; align-items: center; gap: 8px; border: 0; background: none; font: inherit; font-size: var(--fs-meta); color: var(--ink); cursor: pointer; padding: 4px 0; }
+  .cmptog .tr { width: 30px; height: 18px; border-radius: 999px; background: color-mix(in srgb, var(--muted) 45%, transparent); position: relative; transition: background .15s; }
+  .cmptog .th { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); transition: left .15s; }
+  .cmptog[aria-checked="true"] .tr { background: var(--accent); } .cmptog[aria-checked="true"] .th { left: 14px; }
+  .tabs.vtabs button.cmptog { border: 0; background: none; box-shadow: none; border-radius: 0; color: var(--ink); }
+  h3 .cmptog { margin: 0 0 0 16px; vertical-align: middle; font-weight: 400; letter-spacing: 0; }
+  .cmpbar .tabs { margin: 0; gap: 4px; } .cmpbar .tabs button { padding: 4px 12px; font-size: var(--fs-meta); }
+  .slider { position: relative; height: 66vh; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: #fff; user-select: none; touch-action: none; cursor: ew-resize; }
+  .slider iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; pointer-events: none; background: #fff; }
+  .slider .sl-top { clip-path: inset(0 calc(100% - var(--x, 50%)) 0 0); }
+  .slider .sl-line { position: absolute; top: 0; bottom: 0; left: var(--x, 50%); width: 2px; margin-left: -1px; background: var(--accent); pointer-events: none; }
+  .slider .sl-knob { position: absolute; top: 50%; left: var(--x, 50%); width: 32px; height: 32px; margin: -16px 0 0 -16px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: var(--fs-meta); box-shadow: 0 2px 8px rgba(0,0,0,.25); pointer-events: none; }
+  .slider .sl-tag { position: absolute; top: 10px; padding: 2px 8px; border-radius: 999px; background: rgba(22,24,29,.75); color: #fff; font-size: var(--fs-micro); pointer-events: none; }
+  .slider .sl-tag.l { left: 10px; } .slider .sl-tag.r { right: 10px; }
   /* Product → Kit: the product's named values and its components' variants, a tile each, as the elements are. */
   .kit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: 12px; margin: 12px 0 0; padding: 0; list-style: none; }
   .kit-tile { display: grid; gap: 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); padding: 8px; min-width: 0; }
@@ -1818,6 +1871,7 @@
     "follow-up": "Design Desk looks at how the screen works, who else is changing it, and what a design change can do.",
     explore: "Drawing the design options.",
     now: "Drawing the screen as it looks in the product today, to set beside an option.",
+    today: "Design Desk takes the screen this request changes from the product, with made-up data, and marks the parts it touches. It shows here before the options.",
     decision: "Recording a decision from a comment, with who said it and a link back to it.",
     "decision-check": "Checking the design against the decisions in force; what it goes against shows here.",
     ci: "Setting Design Desk's check on the pull request to follow the handled mark.",
@@ -2562,7 +2616,9 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
   // Text from a record goes into a script: `<` is escaped so no text can end the script early.
   const js = (v) => JSON.stringify(v).replace(/</g, "\\u003c");
   // grow: a part found by comparing pages may be one word; show it with enough around it to read.
-  const SNIP_SCRIPT = (sel, text, grow) => `<script>(()=>{const S=${js(sel)},T=${js(text)},G=${grow ? 1 : 0},b=document.body,d=document.documentElement;
+  // `tight`: a part with no box of its own (no fill, border or shadow) is fitted by what it holds, so a
+  // short line in a wide block is not drawn tiny (a wide frame lays blocks out at a desktop width).
+  const SNIP_SCRIPT = (sel, text, grow, cap = 2.5, tight = false) => `<script>(()=>{const S=${js(sel)},T=${js(text)},G=${grow ? 1 : 0},C=${Number(cap) || 2.5},X=${tight ? 1 : 0},b=document.body,d=document.documentElement;
     let e=null;try{e=S&&document.querySelector(S)}catch{}
     if(!e&&T){const w=document.createTreeWalker(b,1);for(let n;(n=w.nextNode());)if(n.children.length===0&&n.textContent.trim()===T){e=n;break}}
     // A preview never shows the review bar, nor the outline its Show hotspots switch draws; a part on another view opens that view first.
@@ -2576,7 +2632,8 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
     // Measured afresh each time, with the design back in place: the frame may not have its size yet.
     const fit=()=>{const W=innerWidth,H=innerHeight;if(!W||!H)return;b.style.transform="none";scrollTo(0,0);
       if(G){b.style.visibility="visible";while(e.parentElement&&e.parentElement!==b){const q=e.getBoundingClientRect();if(q.width>=320&&q.height>=90)break;e=e.parentElement}b.style.visibility="hidden";e.style.visibility="visible"}
-      const r=e.getBoundingClientRect(),p=12;if(!r.width&&!r.height)return;const k=Math.min(W/(r.width+2*p),H/(r.height+2*p),2.5);
+      let r=e.getBoundingClientRect();const p=12;if(!r.width&&!r.height)return;
+      if(X){const cs=getComputedStyle(e),bare=cs.backgroundColor==="rgba(0, 0, 0, 0)"&&cs.backgroundImage==="none"&&cs.boxShadow==="none"&&!["Top","Right","Bottom","Left"].some((k)=>parseFloat(cs["border"+k+"Width"]));if(bare){const q=document.createRange();q.selectNodeContents(e);const c=q.getBoundingClientRect();if(c.width&&c.height)r=c}}const k=Math.min(W/(r.width+2*p),H/(r.height+2*p),C);
       const x=r.left-(W/k-r.width)/2,y=r.top-(H/k-r.height)/2;b.style.transform="scale("+k+") translate("+(-x)+"px,"+(-y)+"px)"};
     fit();addEventListener("load",fit);addEventListener("resize",fit);document.fonts&&document.fonts.ready.then(fit)})();<\/script>`;
   // Where a state's page differs from its option's: the smallest element holding every change, as a
@@ -2594,7 +2651,7 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
     }
     return b === B ? "" : `body > ${path.join(" > ")}`;
   }
-  const snipDoc = (html, sel, text, grow) => { const sc = SNIP_SCRIPT(sel, text, grow); return html.includes("</body>") ? html.replace("</body>", `${sc}</body>`) : html + sc; };
+  const snipDoc = (html, sel, text, grow, cap, tight) => { const sc = SNIP_SCRIPT(sel, text, grow, cap, tight); return html.includes("</body>") ? html.replace("</body>", `${sc}</body>`) : html + sc; };
   async function peekOf(el) {
     // A page research cites: its section and the words in it (docs/requests.md → Research).
     if (el.dataset.doc !== undefined) return { kind: "doc", title: el.dataset.docTitle, what: el.dataset.docKind, section: el.dataset.docSection, excerpt: el.dataset.docExcerpt };
@@ -5224,10 +5281,10 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
   // A section of the option's panel — All elements, its design, User stories: one heading with
   // its count and half a line, folding with +/−; how a person leaves it holds while the page is
   // open. Elements and the design start open, Why it looks like this and the stories folded.
-  const SECT_OPEN = { why: false, elements: true, design: true, stories: false };
+  const SECT_OPEN = { why: false, elements: true, design: true, stories: false, today: true };
   // The option's design (the mockup) starts open in simple mode too.
-  const sectOpen = (key) => S.sect[key] ?? SECT_OPEN[key];
-  const sect = (key, title, n, hint, body) => `<details class="fold big sect ${key}" data-sect="${key}"${key === "stories" ? ' id="stories" data-stories' : ""}${sectOpen(key) ? " open" : ""}><summary><h3>${title}${n != null ? `<span class="n">${n}</span>` : ""}</h3>${hint ? `<span class="hint">${hint}</span>` : ""}</summary>${body}</details>`;
+  const sectOpen = (key, dflt) => S.sect[key] ?? dflt ?? SECT_OPEN[key];
+  const sect = (key, title, n, hint, body, dflt) => `<details class="fold big sect ${key}" data-sect="${key}"${key === "stories" ? ' id="stories" data-stories' : ""}${sectOpen(key, dflt) ? " open" : ""}><summary><h3>${title}${n != null ? `<span class="n">${n}</span>` : ""}</h3>${hint ? `<span class="hint">${hint}</span>` : ""}</summary>${body}</details>`;
   // The option's design, named for what it is.
   const DRAWN = { wireframe: "Wireframe", mockup: "Mockup", figma: "From Figma", picture: "Pictures" };
 
@@ -5240,20 +5297,55 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
     if (!sp?.on) return frame(v);
     const vs = c.variants || [];
     const pane = (k, i) => {
-      const x = vs.find((y) => y.id === k), today = k === "now" && c.now?.asset;
+      const x = vs.find((y) => y.id === k), today = k === "now" && todayPic(c);
       if (x || today) {
-        const name = x ? x.name : c.now.name || "How it looks today";
-        const head = `<div class="pane-head">${x ? `<span class="ono">${vs.indexOf(x) + 1}</span>` : `<span class="chip" title="The screen as it is in the product now, drawn by Design Desk ${esc(when(c.now.at))}">Today</span>`}<b>${esc(name)}</b><span class="grow"></span><button class="btn small" data-split-clear="${i}" aria-label="Take ${esc(name)} out of this half" title="Empties this half">✕</button></div>`;
-        return `<div class="pane">${head}${x ? frame(x) : `<iframe class="frame" data-pane-asset="${esc(c.now.asset)}" sandbox="allow-scripts" title="${esc(name)}"></iframe>`}</div>`;
+        const name = x ? x.name : c.now.name || "How it looks today", shot = !x && !c.now.asset ? c.now.shots[0] : null;
+        const head = `<div class="pane-head">${x ? `<span class="ono">${vs.indexOf(x) + 1}</span>` : `<span class="chip" title="The screen as it is in the product now, ${shot ? "taken from the product" : "drawn by Design Desk"} ${esc(when(c.now.at))}">Today</span>`}<b>${esc(name)}</b><span class="grow"></span><button class="btn small" data-split-clear="${i}" aria-label="Take ${esc(name)} out of this half" title="Empties this half">✕</button></div>`;
+        const todayBox = shot ? `<div class="frame today-frame"><img alt="${esc(name)} today" data-asset="${esc(shot.asset)}" /></div>` : `<iframe class="frame" data-pane-asset="${esc(c.now.asset)}" sandbox="allow-scripts" title="${esc(name)}"></iframe>`;
+        return `<div class="pane">${head}${x ? frame(x) : todayBox}</div>`;
       }
       const drawing = working(c).includes("now");
-      const todayBtn = c.now?.asset ? `<button class="btn" data-split-now="${i}" title="Shows the screen as it is in the product now, drawn by Design Desk, in this half">Show how it looks today</button>`
+      const todayBtn = todayPic(c) ? `<button class="btn" data-split-now="${i}" title="Shows the screen as it is in the product now in this half">Show how it looks today</button>`
         : drawing ? `<span class="hint"><span class="spin"></span> Design Desk is drawing how it looks today; it appears here by itself.</span>`
         : c.triage && can("explore") && !closed(c) ? `<button class="btn" data-act="draw-now" title="Design Desk draws the screen as it is in the product now, in the product's own style, to set beside an option">Draw how it looks today</button>` : "";
       return `<div class="pane"><div class="pane-head"><span class="hint">Empty</span><span class="grow"></span></div><div class="pane-empty"><p>Drag another option's tab here.</p>${todayBtn}</div></div>`;
     };
     return `<div class="split">${pane(sp.panes[0], 0)}${pane(sp.panes[1], 1)}</div>`;
   }
+  // Compare with today (docs/desk-page.md → Compare with today): one switch over the option, off
+  // until a person turns it on; it holds for every option and request while the page is open.
+  // Simple mode shows the drawing alone, as before: no pictures from the product, no switch.
+  const todayPic = (c) => !!(c.now?.asset || (!simple() && c.now?.shots?.length));
+  const comparing = (c) => S.cmpMode === "compare" && !simple() && todayPic(c);
+  // It sits beside the Design options heading: it is about every option, not the one shown.
+  function cmpSwitch(c, v) {
+    if (simple() || !todayPic(c) || !v || v.fidelity === "picture") return "";
+    const on = comparing(c);
+    return `<button class="cmptog" role="switch" aria-checked="${on}" data-cmp-mode="${on ? "new" : "compare"}" title="Each part and the whole screen beside how it is in the product now"><span class="tr"><span class="th"></span></span>Compare with today</button>`;
+  }
+  const cmpView = (c) => c.now?.asset ? S.cmpView || "slider" : "side";
+  function cmpBar(c, v) {
+    if (!comparing(c) || v.fidelity === "picture" || !c.now?.asset) return "";
+    const view = cmpView(c), b = (k, words, tip) => `<button data-cmp-view="${k}" aria-pressed="${view === k}" title="${esc(tip)}">${words}</button>`;
+    return `<div class="cmpbar"><div class="tabs" role="group" aria-label="How to compare">${b("slider", "◧ Slider", "One picture: drag across it to go from today to this option")}${b("side", "⇆ Side by side", "Today on the left, this option on the right")}</div></div>`;
+  }
+  // Today beside the option: the drawing when there is one (it clicks through like the option), else the picture from the product.
+  function sideBox(c, v) {
+    const shot = c.now.shots?.[0];
+    const today = c.now.asset ? `<iframe class="frame" data-pane-asset="${esc(c.now.asset)}" sandbox="allow-scripts" title="Today"></iframe>` : `<div class="frame today-frame"><img alt="${esc(c.now.name || "The screen")} today" data-asset="${esc(shot.asset)}" /></div>`;
+    return `<div class="split"><div class="pane"><div class="pane-head"><span class="chip">Today</span><b>${esc(c.now.name || shot?.name || "How it looks today")}</b></div>${today}</div><div class="pane"><div class="pane-head"><span class="ono">${(c.variants || []).indexOf(v) + 1}</span><b>${esc(v.name)}</b></div><iframe class="frame" id="variant-frame" sandbox="allow-scripts" title="${esc(v.name)}"></iframe></div></div>`;
+  }
+  function sliderBox(c, v) {
+    return `<div class="slider" data-slider style="--x: 50%"><iframe data-pane-asset="${esc(v.asset)}" sandbox="allow-scripts" title="${esc(v.name)}"></iframe><iframe class="sl-top" data-pane-asset="${esc(c.now.asset)}" sandbox="allow-scripts" title="Today"></iframe><span class="sl-line"></span><span class="sl-knob" aria-hidden="true">⇆</span><span class="sl-tag l">Today</span><span class="sl-tag r">${esc(v.name)}</span></div>`;
+  }
+  // The slider's handle follows the pointer while it is pressed; the arrow keys move it too.
+  document.addEventListener("pointerdown", (e) => {
+    const s = e.target.closest?.("[data-slider]");
+    if (!s) return;
+    const move = (ev) => { const r = s.getBoundingClientRect(); s.style.setProperty("--x", `${Math.max(0, Math.min(100, ((ev.clientX - r.left) / r.width) * 100))}%`); };
+    move(e); s.setPointerCapture(e.pointerId);
+    s.onpointermove = move; s.onpointerup = () => { s.onpointermove = null; };
+  });
   // While an option's tab is dragged, the whole panel the tabs switch is split in two halves to drop on.
   const dropLayer = (c) => (c.variants || []).some((x) => x.asset) ? `<div class="droplayer" aria-hidden="true"><div data-drop-side="0"></div><div data-drop-side="1"></div></div>` : "";
   // Side by side is a tab of its own, the first: named for its two halves, closed with its ✕.
@@ -5272,7 +5364,7 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
     if (!S.variant || !vs.some((v) => v.id === S.variant)) S.variant = (favourite(c) || vs[0]).id;
     const v = vs.find((x) => x.id === S.variant);
     const mine = myVote(c, v.id);
-    return `<h3>Design options${locked(c) ? ` <span class="hint locked-note">🔒 Approved: this design no longer changes. To change it, ${can("request") ? `<button class="anchor-text" data-adjust>start a new request from this one</button>` : "start a new request from this one"}.</span>` : ""}</h3>
+    return `<h3>Design options${cmpSwitch(c, v)}${locked(c) ? ` <span class="hint locked-note">🔒 Approved: this design no longer changes. To change it, ${can("request") ? `<button class="anchor-text" data-adjust>start a new request from this one</button>` : "start a new request from this one"}.</span>` : ""}</h3>
       <div class="tabs vtabs vrow" role="group" aria-label="Design options"><div class="vscroll">${splitTab(c)}${vs.map((x) => `<button data-variant="${esc(x.id)}" aria-pressed="${!splitOf(c)?.on && x.id === v.id}"${x.asset ? ` draggable="true" title="Shows this design option; drag it onto the panel below to set it beside another"` : ""}><span class="ono">${vs.indexOf(x) + 1}</span>${esc(x.name)}${(x.version || 1) > 1 ? ` <span class="chip" title="Design Desk changed this option ${x.version - 1} ${x.version === 2 ? "time" : "times"}; this is its latest version">version ${x.version}</span>` : ""}${c.live_pick?.variant === x.id && (["building", "live"].includes(c.prototype?.state) || working(c).includes("build")) ? ` <span class="chip info" title="The option the live prototype is built from">▶ Goes live</span>` : ""}${closeTab(c, x)}</button>`).join("")}${addOptionTab(c)}</div>${wsTab0(c)}</div>
       ${splitOf(c)?.on ? `<div class="vpanel">${designBox(c, v)}${dropLayer(c)}</div>` : `<div class="vpanel">
       ${v.fidelity === "picture" ? `<p class="hint">Pictures added by ${v.by ? who(v.by) : "a person"}; Design Desk drew nothing.</p>` : ""}
@@ -5283,7 +5375,7 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
       ${renderCouncils(c)}
       ${simple() ? "" : whySection(c, v)}
       ${renderOptionElements(c, v)}
-      ${sect("design", esc(DRAWN[v.fidelity] || "Design"), null, v.fidelity === "picture" ? "As the person added them." : "Click through it as in the product.", designBox(c, v))}
+      ${sect("design", esc(DRAWN[v.fidelity] || "Design"), null, v.fidelity === "picture" ? "As the person added them." : "Click through it as in the product.", `${cmpBar(c, v)}${comparing(c) && v.fidelity !== "picture" && !splitOf(c)?.on ? (cmpView(c) === "side" ? sideBox(c, v) : sliderBox(c, v)) : designBox(c, v)}`)}
       ${againstBox(c, v.id)}${c.figma_check?.variant === v.id ? figmaBox(c) : ""}
       ${renderStories(c, v)}${dropLayer(c)}</div>`}`;
   }
@@ -5395,6 +5487,7 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
       ${renderGrill(c)}
       ${shots(found)}
       </div>${briefToggle(S.folds.made, "made")}</div></div>
+      ${simple() ? "" : todaySection(c)}
       ${live(c) ? `<details class="fold"><summary>The design options — open to change the design and build the prototype again</summary>${renderOptions(c)}${canBuild() ? `<div class="actions"><button class="btn" data-act="build">Build the live prototype again…</button></div>` : ""}</details>`
         : `${renderOptions(c)}${renderPrototype(c)}`}
       ${renderImpact(c.impact)}
@@ -5760,11 +5853,13 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
 
   // All elements of an option: every part it changes or adds, as a picture above the
   // design; one opens in a dialog with its states (docs/requests.md → The option's elements).
-  const CHANGE = { new: ["New", "info", "A part the product does not have yet"], changed: ["Changed", "warn", "A part of the product this design changes"] };
+  const CHANGE = { new: ["New", "info", "A part the product does not have yet"], changed: ["Changed", "warn", "A part of the product this design changes"], same: ["As today", "", "This option leaves it as it is in the product"] };
+  // A part cut live from a page: drawn wide when its place is known (loadPictures → widen).
+  const partFrame = (page, selector, base, label = "") => `<iframe sandbox="allow-scripts" loading="lazy" tabindex="-1"${label ? ` title="${esc(label)}"` : ` aria-hidden="true"`} data-snip-asset="${esc(page)}" data-snip-sel="${esc(selector || "")}" data-snip-base="${esc(selector ? "" : base || "")}"${selector ? " data-snip-wide" : ""}></iframe>`;
   function elementPic(v, e) {
     if (e.shot) return `<img alt="" data-asset="${esc(e.shot)}" />`;
     const page = e.derived ? e.asset : v.asset;
-    return page ? `<iframe sandbox="allow-scripts" loading="lazy" tabindex="-1" aria-hidden="true" data-snip-asset="${esc(page)}" data-snip-sel="${esc(e.selector || "")}" data-snip-base="${esc(e.selector ? "" : v.asset || "")}"></iframe>` : "";
+    return page ? partFrame(page, e.selector, v.asset) : "";
   }
   // An element of the approved option goes to the design catalog on its own; once there, a link to it.
   function catalogButton(c, v, e) {
@@ -5773,17 +5868,99 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
     if (id) return `<button class="anchor" data-el-goto="${esc(id)}" title="It is in Product → Elements, marked as from this approved design; open it there">✓ In the catalog</button>`;
     return can("add") ? `<button class="btn small" data-add-catalog="${esc(e.key)}" title="Add to the design catalog: it goes to Product → Elements with its states, marked as from this approved design">Add to catalog</button>` : "";
   }
+  // The request's elements (docs/requests.md → The same elements in every option): every option
+  // shows them in one order; one this option leaves out keeps its place, with why.
+  function alignedElements(c, v) {
+    const els = elementsOf(v), shared = c.shared_elements || [];
+    // Simple mode keeps each option's own elements, as before.
+    if (simple() || !shared.length || v.fidelity === "picture" || (!(v.elements || []).length && !(v.left_out || []).length)) return els;
+    const gap = (s) => ({ key: `gap-${s.id}`, gap: true, name: s.name, why: (v.left_out || []).find((x) => x.id === s.id)?.why || "" });
+    // States drawn of a part before the option left it out show no second tile beside its gap.
+    const out = shared.filter((s) => (v.left_out || []).some((x) => x.id === s.id)), outIds = new Set(out.map((s) => s.id)), outNames = new Set(out.map((s) => partKey(s.name)));
+    const leftOver = (e) => e.derived && (e.states.some((x) => outIds.has(x.element)) || outNames.has(e.name_key));
+    return [...shared.map((s) => els.find((e) => !e.derived && e.id === s.id) || gap(s)), ...els.filter((e) => !leftOver(e) && (e.derived || !shared.some((s) => s.id === e.id)))];
+  }
   function renderOptionElements(c, v) {
-    const els = elementsOf(v);
+    const els = alignedElements(c, v);
     // Nothing listed yet: no section, there is nothing to do with it.
     if (!els.length) return "";
     const tile = (e) => {
+      if (e.gap) return `<div class="eltile elgap"><div class="elopen"><span class="elpic">Not in this option</span><span class="elname">${esc(e.name)}</span>${e.why ? `<span class="elwhy">${esc(e.why)}</span>` : ""}</div></div>`;
       const busy = drawingStates(c, v, e), ch = CHANGE[e.change];
       const cat = catalogButton(c, v, e);
-      return `<div class="eltile"><button class="elopen" data-el="${esc(e.key)}" title="Open ${esc(e.name)}: every state of it and the use case each covers"><span class="elpic">${elementPic(v, e)}</span><span class="elname">${esc(e.name)}</span>
-        <span class="elmeta">${ch ? `<span class="chip ${ch[1]}" title="${esc(ch[2])}">${ch[0]}</span>` : ""}${busy ? `<span class="chip info" title="Design Desk is drawing its states">● Drawing states</span>` : statesComplete(v, e) ? `<span class="chip ok" title="Every state of it is drawn for the option's latest version; nothing is left to draw">✓ All ${plural(e.states.length, "state", "states")}</span>` : `<span class="chip" title="${e.states.length ? "States drawn of it" : "Open it to have its states drawn"}">${e.states.length ? plural(e.states.length, "state", "states") : "No states yet"}</span>`}</span></button>${cat ? `<div class="elcat">${cat}</div>` : ""}</div>`;
+      return `<div class="eltile"><button class="elopen" data-el="${esc(e.key)}" title="Open ${esc(e.name)}: every state of it and the use case each covers">${comparing(c) ? baPic(c, v, e) : `<span class="elpic">${elementPic(v, e)}</span>`}<span class="elname">${esc(e.name)}</span>${e.how && !simple() ? `<span class="elhow">${esc(e.how)}</span>` : ""}
+        <span class="elmeta">${ch ? `<span class="chip ${ch[1]}" title="${esc(ch[2])}">${ch[0]}</span>` : ""}${e.only_here && !simple() && (c.shared_elements || []).length ? `<span class="chip" title="${esc(`Only this option has it: ${e.only_here}`)}">Only in this option</span>` : ""}${busy ? `<span class="chip info" title="Design Desk is drawing its states">● Drawing states</span>` : statesComplete(v, e) ? `<span class="chip ok" title="Every state of it is drawn for the option's latest version; nothing is left to draw">✓ All ${plural(e.states.length, "state", "states")}</span>` : `<span class="chip" title="${e.states.length ? "States drawn of it" : "Open it to have its states drawn"}">${e.states.length ? plural(e.states.length, "state", "states") : "No states yet"}</span>`}</span></button>${cat ? `<div class="elcat">${cat}</div>` : ""}</div>`;
     };
-    return sect("elements", "All elements", els.length, "The parts this option changes or adds, each on its own. Open one to see it in every state.", `<div class="elgrid">${els.map(tile).join("")}</div>`);
+    // While comparing: how much of today the option changes, in one line over the tiles.
+    const cnt = (k) => els.filter((e) => !e.gap && e.change === k).length, gaps = els.filter((e) => e.gap).length;
+    const sum = `<div class="elsum">${cnt("changed") ? `<span class="chip warn">${cnt("changed")} changed</span>` : ""}${cnt("new") ? `<span class="chip info">${cnt("new")} new</span>` : ""}${cnt("same") ? `<span class="chip">${cnt("same")} as today</span>` : ""}${gaps ? `<span class="chip">${gaps} left out</span>` : ""}</div>`;
+    return sect("elements", "All elements", els.filter((e) => !e.gap).length, comparing(c) ? "Each part as it is in the product today, and as this option draws it. Open one for every state." : "The parts this option changes or adds, each on its own. Open one to see it in every state.", `${comparing(c) ? sum : ""}<div class="elgrid">${els.map(tile).join("")}</div>`);
+  }
+  // How it looks today (docs/desk-page.md → How it looks today): from the first exploration, before
+  // any option, the screen the request changes as it is in the product, the request's parts
+  // numbered on it, and each part on its own. Open by default only while the request is checked.
+  function todaySection(c) {
+    if (c.kind !== "request" || !c.triage || closed(c)) return "";
+    const shared = c.shared_elements || [], n = c.now, open = stageOf(asShown(c)) <= 0;
+    const head = (name) => `How it looks today${name ? ` · ${esc(name)}` : ""}`, hint = "The screen as it is in the product now, before any design.";
+    if (!todayPic(c)) {
+      const busy = working(c).some((k) => k === "now" || k === "explore" || k === "request" || k === "follow-up");
+      const body = busy ? `<div class="working"><span class="spin"></span><div>${esc(WORK.today)}</div></div>`
+        : can("explore") ? `<div class="actions"><button class="btn" data-act="draw-now" title="${esc(WORK.today)}">Take how it looks today</button></div>` : `<p class="hint">Design Desk has not taken it yet.</p>`;
+      return sect("today", head(), null, hint, body, open);
+    }
+    // The pictures from the product first; the drawing when there are none.
+    const views = n.shots?.length ? n.shots.map((x) => ({ name: x.name || n.name, shot: x })) : [{ name: n.name, asset: n.asset }];
+    const i = Math.min(S.todayView || 0, views.length - 1), view = views[i];
+    const num = (id) => shared.findIndex((s) => s.id === id) + 1;
+    const big = view.shot ? markedShot(view.shot, num, `${view.name || "The screen"} today`)
+      : `<div class="today-shot"><iframe sandbox="allow-scripts" tabindex="-1" title="${esc(view.name || "The screen")} today" data-today-asset="${esc(view.asset)}" data-marks="${esc(JSON.stringify((n.elements || []).map((x) => ({ n: num(x.id), sel: x.selector })).filter((x) => x.n)))}"></iframe></div>`;
+    const from = view.shot ? `The product at ${esc(view.shot.ref)} (${esc(view.shot.commit.slice(0, 7))}), with made-up data · ${esc(when(n.at))}.` : `Redrawn from the code by Design Desk · ${esc(when(n.at))}.`;
+    const tabs = views.length > 1 ? `<div class="today-tabs" role="group" aria-label="Screens">${views.map((x, k) => `<button data-today-view="${k}" aria-pressed="${k === i}">${esc(x.name || `Screen ${k + 1}`)}</button>`).join("")}</div>` : "";
+    const part = (s, k) => {
+      const t = todayOf(c, s.id);
+      return `<li class="${t ? "" : "missing"}"><span class="tn">${k + 1}</span><span class="tp">${t ? partPic(t, "", `${s.name} today`) : "Not in the product today"}</span><span class="tt"><b>${esc(s.name)}</b><span>${esc(s.how || (t ? "" : "The request adds it."))}</span></span></li>`;
+    };
+    const body = `${tabs}<div class="today-wrap"><div>${big}<p class="today-from">${from}</p></div>
+      ${shared.length ? `<div><ol class="today-parts">${shared.map(part).join("")}</ol><p class="today-from">The parts this request touches. Every option draws each of them; Compare with today sets them side by side.</p></div>` : ""}</div>`;
+    return sect("today", head(views.length > 1 ? "" : view.name), null, hint, body, open);
+  }
+  // A picture from the product with the request's parts outlined and numbered on it, drawn to scale.
+  function markedShot(x, num, label) {
+    const r = Math.max(10, Math.round(x.width / 90)), sw = Math.max(2, Math.round(x.width / 480));
+    const marks = x.parts.map((p) => ({ ...p, n: num(p.id) })).filter((p) => p.n).map((p) => `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="${sw * 2}" fill="none" stroke="#e5484d" stroke-width="${sw}"/><circle cx="${p.x}" cy="${p.y}" r="${r}" fill="#e5484d"/><text x="${p.x}" y="${p.y}" dy=".35em" text-anchor="middle" fill="#fff" font-family="system-ui, sans-serif" font-weight="700" font-size="${Math.round(r * 1.2)}">${p.n}</text>`).join("");
+    return `<div class="today-shot pic" data-zoom="${esc(x.asset)}" style="aspect-ratio: ${x.width} / ${x.height}"><svg viewBox="0 0 ${x.width} ${x.height}" role="img" aria-label="${esc(label)}"><image data-asset-href="${esc(x.asset)}" width="${x.width}" height="${x.height}"/>${marks}</svg></div>`;
+  }
+  // The drawing of today with its parts outlined and numbered, laid out at a desktop width and scaled into its box.
+  function todayDoc(html, marks) {
+    const js = `<script>addEventListener("load",()=>{for(const m of ${JSON.stringify(marks).replace(/</g, "\\u003c")}){let e=null;try{e=document.querySelector(m.sel)}catch{}if(!e)continue;const r=e.getBoundingClientRect(),d=document.createElement("div");d.style.cssText="position:absolute;z-index:99999;pointer-events:none;border:3px solid #e5484d;border-radius:6px;left:"+(r.left+scrollX-5)+"px;top:"+(r.top+scrollY-5)+"px;width:"+(r.width+4)+"px;height:"+(r.height+4)+"px";const b=document.createElement("span");b.textContent=m.n;b.style.cssText="position:absolute;left:-14px;top:-14px;width:26px;height:26px;border-radius:50%;background:#e5484d;color:#fff;font:700 15px/26px system-ui,sans-serif;text-align:center";d.append(b);document.body.append(d);}})<\/script>`;
+    return /<\/body>/i.test(html) ? html.replace(/<\/body>/i, `${js}</body>`) : html + js;
+  }
+  function fitToday() { for (const f of document.querySelectorAll("iframe[data-today-asset]")) { const w = f.parentElement.clientWidth; if (w) f.style.transform = `scale(${w / WIDE})`; } }
+  new ResizeObserver(fitToday).observe(document.documentElement);
+  // A part as it is today, on its own: a picture of it, a box cut from a picture of the screen
+  // (8 px round it, as a part taken alone is), or the part cut live from the drawing.
+  function partPic(x, base, label) {
+    if (x.shot) return `<img alt="${esc(label)}" data-asset="${esc(x.shot)}" />`;
+    if (x.crop) { const k = x.crop, pad = 8; return `<svg viewBox="${k.x - pad} ${k.y - pad} ${k.w + 2 * pad} ${k.h + 2 * pad}" role="img" aria-label="${esc(label)}"><image data-asset-href="${esc(k.asset)}" width="${k.width}" height="${k.height}"/></svg>`; }
+    return partFrame(x.asset, x.selector, base, label);
+  }
+  // A tile's picture while comparing: the part today beside the part in the option.
+  function baPic(c, v, e) {
+    const bf = e.change === "new" ? null : beforeOf(c, e);
+    const before = e.change === "new" ? `<span class="bap none">Not in the product today</span>` : bf ? `<span class="bap">${partPic(bf, "", `${e.name} today`)}</span>` : `<span class="bap none">No picture from before</span>`;
+    return `<span class="elpic ba"><span class="bah"><span class="bal">Today</span>${before}</span><span class="arr" aria-hidden="true">→</span><span class="bah"><span class="bal">${esc(v.name)}</span><span class="bap">${elementPic(v, e)}</span></span></span>`;
+  }
+
+  // A part as it is today, only for a part of the request's shared list; a part the option adds has none.
+  const sharedPart = (c, e) => !e.derived && e.change !== "new" && (c.shared_elements || []).some((x) => x.id === e.id);
+  function beforeOf(c, e) { return sharedPart(c, e) ? todayOf(c, e.id) : null; }
+  // A shared part today: its box on the screen taken from the product (now.shots), else cut from
+  // the drawing of today (now.asset).
+  function todayOf(c, id) {
+    for (const x of c.now?.shots || []) { const b = x.parts.find((p) => p.id === id); if (b) return { crop: { asset: x.asset, width: x.width, height: x.height, x: b.x, y: b.y, w: b.w, h: b.h }, source: "instance", ref: x.ref, commit: x.commit, at: c.now.at }; }
+    const at = c.now?.asset ? (c.now.elements || []).find((x) => x.id === id) : null;
+    return at ? { asset: c.now.asset, selector: at.selector, source: "now", at: c.now.at } : null;
   }
 
   // The element dialog: which design it is of, what it is, and every state drawn of it; without
@@ -6947,6 +7124,34 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
   }
 
   // ---------- rendering the detail ----------
+  // A part drawn live in a narrow box squeezes: the design lays itself out at the box's width.
+  // A wide frame lays it out at a desktop width, as the product's own pictures are taken
+  // (design capture's 1440), and is scaled down into its box, so a part looks as it does on a
+  // screen and a part today and in an option compare like with like (docs/desk-page.md → How it looks today).
+  const WIDE = 1440;
+  const wideBoxes = new ResizeObserver((es) => {
+    for (const x of es) {
+      if (!x.target.isConnected) { wideBoxes.unobserve(x.target); continue; }
+      const f = x.target.querySelector(":scope > iframe[data-snip-wide]");
+      if (!f) continue;
+      // A frame whose box had no size yet (a folded section) is drawn once it has one, scaled for it.
+      if (f.dataset.wideWait) { if (widen(f) > 0) { delete f.dataset.wideWait; loadPictures(x.target).catch(() => {}); } continue; }
+      // How far the part may be enlarged was set for the box's first size: a box much wider or
+      // narrower draws it again, so before and after stay alike.
+      const was = Number(f.dataset.wideK) || 0, k = widen(f);
+      if (was && k && f.srcdoc && Math.abs(k / was - 1) > 0.25) { f.removeAttribute("srcdoc"); loadPictures(x.target).catch(() => {}); }
+    }
+  });
+  function widen(f) {
+    const box = f.parentElement, st = getComputedStyle(box);
+    const pl = parseFloat(st.paddingLeft) || 0, pt = parseFloat(st.paddingTop) || 0;
+    const W = box.clientWidth - pl - (parseFloat(st.paddingRight) || 0), H = box.clientHeight - pt - (parseFloat(st.paddingBottom) || 0);
+    if (!f.dataset.wideSeen) { f.dataset.wideSeen = "1"; wideBoxes.observe(box); }
+    if (W <= 0 || H <= 0) return 0;
+    const k = Math.min(1, W / WIDE);
+    Object.assign(f.style, { position: "absolute", left: `${pl}px`, top: `${pt}px`, width: `${W / k}px`, height: `${H / k}px`, transform: `scale(${k})`, transformOrigin: "0 0" });
+    return k;
+  }
   async function loadPictures(root) {
     // A state with no picture of its part: drawn live from the state's page, cut to the part when its path is known.
     for (const f of root.querySelectorAll("iframe[data-snip-asset]")) {
@@ -6955,8 +7160,15 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
       try {
         const html = decode(await asset(f.dataset.snipAsset)), base = f.dataset.snipBase;
         const sel = f.dataset.snipSel || (base ? diffPath(decode(await asset(base)), html) : "");
-        f.srcdoc = snipDoc(html, sel, "", !f.dataset.snipSel && !!sel);
+        const wide = f.hasAttribute("data-snip-wide"), k = wide ? widen(f) : 1;
+        if (!k) { f.dataset.wideWait = "1"; continue; }
+        if (wide) f.dataset.wideK = String(k);
+        f.srcdoc = snipDoc(html, sel, "", !f.dataset.snipSel && !!sel, 2.5 / k, wide);
       } catch {}
+    }
+    for (const im of root.querySelectorAll("image[data-asset-href]")) {
+      if (im.getAttribute("href")) continue;
+      try { im.setAttribute("href", dataUrl(await asset(im.dataset.assetHref))); } catch {}
     }
     for (const img of root.querySelectorAll("img[data-asset]")) {
       if (img.src) continue;
@@ -6976,6 +7188,8 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
     if (vf && v) { storyPlayer(null); vf.onload = () => { vf.dataset.ready = "1"; sayReviewNotes(vf); if (vf._bar) vf.contentWindow?.postMessage({ type: "desk-bar-set", ...vf._bar }, "*"); }; try { vf.srcdoc = withScript(decode(await asset(v.asset))); } catch {} }
     for (const pf of document.querySelectorAll("iframe[data-pane-asset]")) { try { pf.onload = () => sayReviewNotes(pf); pf.srcdoc = withScript(decode(await asset(pf.dataset.paneAsset))); } catch {} }
     for (const sf of document.querySelectorAll("iframe[data-sheet]")) { try { sf.srcdoc = decode(await asset(sf.dataset.sheet)); } catch {} }
+    for (const tf of document.querySelectorAll("iframe[data-today-asset]")) { try { tf.srcdoc = todayDoc(decode(await asset(tf.dataset.todayAsset)), JSON.parse(tf.dataset.marks || "[]")); } catch {} }
+    fitToday();
   }
 
   // A picture that carries another picture's marks keeps them only when both have the same
@@ -7739,6 +7953,17 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
     if (ds.variant) { S.variant = ds.variant; showSplit(false, false); renderDetail(); return; }
     if ("splitTab" in ds) { showSplit(true); return; }
     if (ds.splitNow !== undefined) { startSplit(S.card, Number(ds.splitNow), "now"); return; }
+    // Compare with today redraws the item: the control pressed stays where it was under the pointer.
+    if (ds.cmpMode || ds.cmpView) {
+      e.preventDefault();
+      const sel = ds.cmpMode ? "[data-cmp-mode]" : `[data-cmp-view="${ds.cmpView}"]`, y = el.getBoundingClientRect().top;
+      if (ds.cmpMode) S.cmpMode = ds.cmpMode; else S.cmpView = ds.cmpView;
+      renderDetail();
+      const dy = ($(`#detail ${sel}`)?.getBoundingClientRect().top ?? y) - y, d = $("#detail");
+      if (dy) { if (d.scrollHeight > d.clientHeight) d.scrollTop += dy; else scrollBy(0, dy); }
+      return;
+    }
+    if (ds.todayView !== undefined) { S.todayView = Number(ds.todayView); renderDetail(); return; }
     if (ds.splitClear !== undefined) { const sp = splitOf(S.card); if (!sp) return; sp.panes[Number(ds.splitClear)] = null; if (!sp.panes.some(Boolean)) endSplit(); else renderDetail(); return; }
     if ("splitEnd" in ds) { endSplit(); return; }
     // An element of the option: its dialog, its states drawn, the product's element it changes.

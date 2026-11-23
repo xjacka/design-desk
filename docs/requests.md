@@ -160,12 +160,17 @@ The person deciding should know it before a single variant exists.
    person opened it, it leaves their row: the spec carries `cannot` to developers. Keep `status: triage`. Put the request's own words in `summary` only if its title is unclear.
    A request written in a language other than English gets its English in the same upsert
    ([A request in another language](#a-request-in-another-language)).
-5. A request someone asked for in Slack (`idea` with a Slack `origin`) whose verdict is not
+5. Unless the verdict is `product`, show **how it looks today** before any option (Variants →
+   **How it looks today**, below): list the parts the request touches as `shared_elements`
+   (Variants → **The same elements in every option**), then take the screen from the product,
+   or draw it where there is no screens instance. The Desk opens it while the request is in
+   Checking.
+6. A request someone asked for in Slack (`idea` with a Slack `origin`) whose verdict is not
    `product`: they asked for options, so `design desk enqueue explore R-<n>`, unless
    `design desk inbox` already holds an open `explore` item of the card. So does a request
    with `request.auto` (filed by someone who may start options, with `request.options` above
    0, or options carried over: `request.carry`) whose verdict is not `product`.
-6. `design desk done Q-<n> --outcome triaged`.
+7. `design desk done Q-<n> --outcome triaged`.
 
 ### A request in another language
 
@@ -226,19 +231,38 @@ Compare with the product); a note from **Work into the design** is a `revise` li
   what makes it different. A wish the boundary does not allow is drawn as far as it goes and
   said in its `rationale`. At most 6 options: the store refuses more. A request that asked for
   no options (`request.options` 0) shows **+ New option** alone once it is triaged.
-- **How it looks today** (`now`): with a request's first options (`explore`), and alone when a
-  person pressed **Draw how it looks today** (`explore` with `scope: "now"`), draw the screen the
-  request changes **as it is in the product now**, without the change: one self-contained HTML
-  file built the same way as an option (the product's own styles, sample data, its views wired),
-  stored with `design desk asset <file> --kind variant --card R-<n>`, then `design desk upsert`
-  with `now: {asset, name}` (`name`: the screen in a few plain words; `null` clears it). It is
-  not an option: no vote, no notes, no version; the Desk sets it beside an option for people
-  to compare. A `scope: "now"` item draws only this, changes nothing else on the card and
-  leaves the status as it is; it blocks no person's work on the options (asking the team, adding
-  or removing an option, approving). It is whitelisted Desk work (CLAUDE.md → Instruction
-  sources & trust boundary), drawn without the decisions check: it is the product as it is, not
-  a design ([desk.md](desk.md) → Decisions → The check). Redraw it when an explore or a revise
-  finds the product's screen changed since it was drawn.
+- **How it looks today** (`now`), the screen the request changes **as it is in the product now**,
+  without the change. It is made at triage (step 5 there); an `explore` makes it only when the
+  card has none, and a person's **Take how it looks today** or **Draw how it looks today** queues
+  `explore` with `scope: "now"`. It has two forms, and the card keeps both when it has them:
+  - **From the product** (`shots`), whenever `screens` is enabled ([screens.md](screens.md)):
+    bring `main` up to date, then one `design capture` recipe shot per view the request
+    changes (at most 6; a view that alone shows the change is enough), on the screen and state
+    the request is about, with made-up data, each with `"parts": {"<shared id>": "<selector in
+    the product's page>", …}`. Its line prints the picture's `width`, `height` and each part's
+    box (`parts`); a part not shown is under `missing` (the product does not have it, or the
+    recipe is wrong: fix it and try once more). Look at each picture (Read it): a sign-in page or
+    an error is not it. Then `design desk asset <file> --kind screen --card R-<n>` and
+    `design desk upsert` with `now: {name, shots: [{asset, name, ref: "main", commit, width,
+    height, parts}]}`, the commit `screens.sh` installed. These pictures are the product's look,
+    and the Desk shows them first; each part's box gives it its picture of today.
+  - **Drawn** (`asset`): one self-contained HTML file built the same way as an option (the
+    product's own styles, sample data, its views wired), stored with `design desk asset <file>
+    --kind variant --card R-<n>`, with `elements`: where each shared part the product has today
+    sits in it, `[{id, selector, view, view_name}]` (kept while the asset stays the same;
+    `design shot <now.html> <dir> --element <selector>` checks each cuts its part). Draw it with
+    the first options (it is what the Desk's slider and side by side set an option on), and
+    alone where there is no screens instance; the Desk then labels it redrawn from the code,
+    never as the product's look.
+
+  Send `now` whole: `name` is the screen in a few plain words, `null` clears it; `shots` or
+  `elements` left out keep those already there. It is not an option: no vote, no notes, no
+  version. A `scope: "now"` item makes only this, changes nothing else on the card and leaves
+  the status as it is; it blocks no person's work on the options (asking the team, adding or
+  removing an option, approving). It is whitelisted Desk work (CLAUDE.md → Instruction sources &
+  trust boundary), made without the decisions check: it is the product as it is, not a design
+  ([desk.md](desk.md) → Decisions → The check). Make it again when an explore or a revise finds
+  the product's screen changed since.
 - **A person's own option** (`fidelity: picture`): **+ New option** → *Use my own pictures*
   puts their pictures on the card as an option as they are, with `by`; no item is queued and
   nothing is drawn. Keep it as it is (send it back with its `version`); change it only when a
@@ -347,17 +371,30 @@ Compare with the product); a note from **Work into the design** is a `revise` li
   different; `selector` its CSS path in the option's page, or `shot` a picture of it alone
   (`design shot --element`, `--kind image`); `element` the product's element card it changes
   (`E-<n>`, [catalog.md](catalog.md)), when the catalog has one; `controls` its smart controls
-  ([Smart controls](#smart-controls)). The page shows them above the
+  ([Smart controls](#smart-controls)); `only_here` why only this option has it (next item). The page shows them above the
   option's design as **All elements**; one opens in a dialog with its states. A part picked in the design workspace
   that is (or sits inside) an element with states drawn offers **See every state**: the same
   dialog, only to look through them, with no button that draws or adds. A state belongs to the
   element its `element` names, else to the one named as its `part`. An entry without `elements`
   keeps the option's; a revise that adds, removes or moves a part sends them anew. The tiles
   are cut from the option's latest version, so they follow every change of it.
+- **The same elements in every option.** The options answer one brief, so they show the same
+  parts, drawn differently. Before drawing, list the parts the brief touches on the request:
+  `shared_elements: [{id, name, how}]` (at most 24; `how` what the brief needs of it), and give
+  every option an entry under each `id`; its `name` is the request's. The exception is said out
+  loud: a part an option leaves out goes in its `left_out: [{id, why}]` (sent alone, it replaces
+  the option's; `elements` sent without it clears it), and one only it has carries `only_here`, why. The store refuses (400) an option that neither draws nor leaves out a
+  part of the list, or has one off the list without `only_here`, and keeps the request's order and
+  names, the option's own parts after them. A person's own picture and an option that lists no
+  elements are not held to it; a request without the list (one drawn before it) keeps each
+  option's own. A list changed later is checked against every option in the same upsert: send
+  their elements anew. Under **All elements**, a part left out keeps its place, as **Not in this
+  option** with its `why`, so the options line up (full mode; simple mode shows each option's
+  own, as before).
 - Upload each variant: `design desk asset <file.html> --kind variant --name <name>`, and a new
   version of one already on the card with `--card R-<n> --option <id>` ([Names notes hang
   on](#names-notes-hang-on)); set
-  `variants: [{id, version, name, rationale, fidelity, asset, stories, reasons, elements, states}]` (rationale: one
+  `variants: [{id, version, name, rationale, fidelity, asset, stories, reasons, elements, left_out, states}]` (rationale: one
   line on when this one wins) and `status: feedback` in one `design desk upsert` (a Desk-filed request may stay at `variants`: [desk.md](desk.md) → Team feedback). The list is
   every option on the card: one already there goes with the `version` (and each of its states
   with its `version`) the card gave you, a new one without; one to take off goes as `{id,

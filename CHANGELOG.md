@@ -7,6 +7,20 @@ why lives in the PR and commit history, not here. Consumed by the version check
 ([docs/persistence.md](docs/persistence.md) → **Definition version & upgrade**);
 authoring rules: [docs/self-modification.md](docs/self-modification.md) §12.
 
+## 1.102.0 — 2026-11-23
+
+**Upgrade:**
+1. Restart the Desk server ([desk.md](docs/desk.md) → Server): the store takes a request's
+   `shared_elements` and an option's `left_out` and `only_here` ([requests.md](docs/requests.md) →
+   The same elements in every option), and `now.elements` and `now.shots`, pictures of a
+   request's screen taken from the product with each shared part's box ([requests.md](docs/requests.md) →
+   How it looks today). Then republish the page ([desk.md](docs/desk.md) → Publishing the page):
+   in full mode a request shows how it looks today in a section of its own, and **Compare with
+   today** sets each part and the whole screen beside it ([desk-page.md](docs/desk-page.md) → How
+   it looks today). Simple mode looks as before. No data migration.
+2. Nothing else to do: from the next triage, Design Desk lists a request's parts and takes how its
+   screen looks today; requests triaged before keep what they have.
+
 ## 1.101.0 — 2026-11-19
 
 **Upgrade:**

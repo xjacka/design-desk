@@ -1710,6 +1710,33 @@ test("an option says why it looks as it does: its decisions on the request and i
   assert.equal(await desk.locator("#ws-side .why").count(), 1);
 }));
 
+// Two options of one request against the request's elements: one draws both and a part only it
+// has, the other leaves one out and says why (docs/requests.md → The same elements in every option).
+const BRIDGE_SHARED = BRIDGE_STORIES
+  .replace('{ id: "v2", name: "Badge", asset: "A-1", fidelity: "mockup" }] };', `{ id: "v2", name: "Badge", asset: "A-1", fidelity: "mockup" }],
+  shared_elements: [{ id: "banner", name: "Limit banner" }, { id: "card", name: "Provider card" }] };
+request.variants[0].elements = [{ id: "banner", name: "Limit banner", change: "new", selector: "#spend" }, { id: "card", name: "Provider card", change: "changed", selector: "#spend" }, { id: "chart", name: "Trend chart", change: "new", selector: "#spend", only_here: "Only this option draws the trend." }];
+request.variants[1].elements = [{ id: "card", name: "Provider card", change: "changed", selector: "#spend" }];
+request.variants[1].left_out = [{ id: "banner", why: "The limit sits in each row instead." }];
+request.variants[1].states = [{ id: "near", name: "Close to the limit", part: "Limit banner", element: "banner", asset: "A-1", selector: "#spend", version: 1, of: 1 }, { id: "hover", name: "Hovered", part: "Limit banner", asset: "A-1", selector: "#spend", version: 1, of: 1 }];`);
+
+test("the options of a request line up: the same elements in one order, a part left out keeps its place and says why", (t) => open(t, BRIDGE_SHARED, async (desk) => {
+  await desk.click('[data-tab="requests"]');
+  await desk.click('[data-card="r7"]');
+  await desk.waitForSelector("#detail .elements .eltile");
+  const tiles = () => desk.$$eval("#detail .elements .eltile", (ts) => ts.map((t) => t.querySelector(".elname").textContent + (t.classList.contains("elgap") ? " ✕" : "")));
+  assert.deepEqual(await tiles(), ["Limit banner", "Provider card", "Trend chart"]);
+  assert.equal(await desk.textContent('#detail [data-el="chart"] .elmeta [data-tip="Only this option has it: Only this option draws the trend."]'), "Only in this option");
+  assert.equal(await desk.locator('#detail [data-el="card"] .elmeta [data-tip^="Only this option"]').count(), 0, "a part of the request says nothing");
+  assert.match(await desk.textContent("#detail .elements > summary"), /All elements\s*3/);
+  await desk.click('.vtabs [data-variant="v2"]');
+  await desk.waitForFunction(() => document.querySelectorAll("#detail .elements .eltile").length === 2);
+  assert.deepEqual(await tiles(), ["Limit banner ✕", "Provider card"], "the part left out keeps its place, and states drawn of it before show no second tile");
+  assert.match(await desk.textContent("#detail .elements .elgap"), /Not in this option\s*Limit banner\s*The limit sits in each row instead\./);
+  assert.equal(await desk.locator("#detail .elements .elgap button").count(), 0, "it opens nothing");
+  assert.match(await desk.textContent("#detail .elements > summary"), /All elements\s*1/, "the count is of the parts drawn");
+}));
+
 // The same option with nested parts: D-3 shaped the table and its Spend cell, the revoked D-4 its row.
 const BRIDGE_WHY_NESTED = BRIDGE_WHY.replace('parts: [{ selector: "#spend", label: "Spend column" }] }, { decision: "D-4", how: "The total is bold.", parts: [] }',
   'parts: [{ selector: "#spend", label: "Spend column" }, { selector: "table", label: "Table" }] }, { decision: "D-4", how: "The total is bold.", parts: [{ selector: "tr", label: "Row" }] }');
@@ -3693,3 +3720,109 @@ test("Product → Kit is not on the page for a PM", (t) => open(t, withKit({ ...
   await desk.waitForSelector('[data-filter="productFilter:decisions"]');
   assert.equal(await desk.locator('[data-filter="productFilter:kit"]').count(), 0);
 }));
+
+const BEFORE_PAGE = `<!doctype html><html><body><div data-view="1" data-view-name="Agents"><div id="card" style="width:300px;height:80px;background:#36c">Agent</div><p id="label">Limit</p><p id="added">New</p></div></body></html>`;
+const NOW_PAGE = `<!doctype html><html><body><div data-view="1"><div id="card" style="width:300px;height:80px;background:#999">Agent today</div><p id="label">Limit today</p></div></body></html>`;
+const SHOT = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="20"><rect width="40" height="20" fill="#000"/></svg>`;
+const bridgeToday = ({ me = 'role: "designer", email: "alice@example.com", screens: true, can: { comment: true, change: true }' } = {}) => `<script>
+window.calls = [];
+const at = new Date().toISOString();
+const request = { id: "r7", kind: "request", title: "Agent card", status: "feedback", created: at, triage: { verdict: "design", reasons: [] }, prototype: { state: "none" },
+  shared_elements: [{ id: "card", name: "Agent card" }, { id: "label", name: "Limit label" }, { id: "added", name: "Added note" }],
+  now: { asset: "A-now", name: "Agents", at, elements: [{ id: "card", selector: "#card", view: 1, view_name: "Agents" }, { id: "label", selector: "#label", view: 1, view_name: "Agents" }] },
+  variants: [{ id: "v1", name: "Calm", asset: "A-1", fidelity: "mockup", version: 2, elements: [
+    { id: "card", name: "Agent card", change: "changed", how: "Calmer.", selector: "#card", view: "1", view_name: "Agents" },
+    { id: "label", name: "Limit label", change: "changed", how: "Shorter.", selector: "#label", view: "1", view_name: "Agents" },
+    { id: "added", name: "Added note", change: "new", how: "Says which limit stops first.", selector: "#added", view: "1", view_name: "Agents" }] }],
+  threads: [
+    { id: "T-1", kind: "comment", state: "open", anchor: { variant: "v1", selector: "#label", label: "Limit label" }, messages: [{ by: { name: "Pat Lee" }, at, text: "Shorter still?" }, { by: { agent: true }, at, text: "Yes." }] },
+    { id: "T-2", kind: "comment", state: "open", anchor: { variant: "v1", selector: "#card", label: "Agent card" }, messages: [{ by: { name: "Pat Lee" }, at, text: "On the card." }] },
+    { id: "T-3", kind: "comment", state: "resolved", anchor: { variant: "v1", selector: "#label", label: "Limit label" }, messages: [{ by: { name: "Pat Lee" }, at, text: "Done long ago." }] }],
+  waiting: [] };
+window.platform = { async request({ method, path, body }) {
+  calls.push({ method, path, body });
+  const answer = path === "/api/me" ? { ${me} }
+    : path === "/api/cards" ? { cards: [{ ...request, variants: 1, threads: undefined }] } : path === "/api/agenda" ? { agenda: [] }
+    : path === "/api/cards/r7" ? { card: request }
+    : path === "/api/assets/A-1" ? { contentType: "text/html", encoding: "utf8", data: ${JSON.stringify(BEFORE_PAGE).replace(/</g, "\\u003c")} }
+    : path === "/api/assets/A-now" ? { contentType: "text/html", encoding: "utf8", data: ${JSON.stringify(NOW_PAGE).replace(/</g, "\\u003c")} }
+    : path === "/api/assets/A-shot" ? { contentType: "image/svg+xml", encoding: "utf8", data: ${JSON.stringify(SHOT).replace(/</g, "\\u003c")} } : {};
+  return { status: 200, contentType: "application/json", body: JSON.stringify(answer) };
+} };
+try { localStorage.setItem("desk-guide-seen", "1"); } catch {}
+</script>`;
+
+// How it looks today: its own section, open while the request is checked, and Compare with today
+// on the option (docs/desk-page.md → How it looks today).
+const NOW_SHOTS = `now: { name: "Agents", at, shots: [{ asset: "A-shot", name: "Agents", ref: "main", commit: "4286de5", width: 1440, height: 900,
+    parts: [{ id: "card", x: 100, y: 200, w: 300, h: 80 }, { id: "label", x: 100, y: 300, w: 200, h: 20 }] }] },`;
+test("how it looks today is a section of its own, open while the request is checked, its parts numbered on the product's picture", async (t) => {
+  const bridge = bridgeToday().replace('status: "feedback"', 'status: "triage"').replace(/now: \{ asset: "A-now"[^\n]*\n/, `${NOW_SHOTS}\n`).replace(/variants: \[\{ id: "v1"[\s\S]*?\] \}\],\n/, "variants: [],\n");
+  const run = await launch(t, bridge);
+  if (!run) return;
+  const { desk } = run;
+  try {
+    await desk.click('[data-tab="requests"]');
+    await desk.click('[data-card="r7"]');
+    await desk.waitForSelector('#detail details[data-sect="today"][open] .today-shot svg image[href]');
+    const today = await desk.textContent('#detail [data-sect="today"]');
+    assert.match(today, /How it looks today · Agents[\s\S]*The product at main \(4286de5\), with made-up data/);
+    assert.match(today, /1\s*Agent card[\s\S]*2\s*Limit label[\s\S]*3\s*Not in the product today\s*Added note/);
+    assert.equal(await desk.locator('#detail [data-sect="today"] .today-shot svg rect').count(), 2, "each part the product has is outlined");
+    assert.deepEqual(await desk.$$eval('#detail .today-parts .tp svg', (xs) => xs.map((x) => x.getAttribute("viewBox"))), ["92 192 316 96", "92 292 216 36"], "each part is cut from the picture, 8 px round it");
+    assert.equal(await desk.locator("[data-cmp-mode]").count(), 0, "no switch before there is an option");
+  } finally {
+    await run.close();
+  }
+});
+
+test("Compare with today sets each part and the whole screen beside how it looks today", async (t) => {
+  const run = await launch(t, bridgeToday());
+  if (!run) return;
+  const { desk } = run;
+  try {
+    await desk.click('[data-tab="requests"]');
+    await desk.click('[data-card="r7"]');
+    await desk.waitForSelector("#detail .eltile");
+    assert.equal(await desk.locator('#detail details[data-sect="today"][open]').count(), 0, "folded past Checking");
+    assert.equal(await desk.locator("#detail .elpic.ba").count(), 0, "off by default: the option alone");
+    assert.equal(await desk.getAttribute("[data-cmp-mode]", "aria-checked"), "false");
+    await desk.click("[data-cmp-mode]");
+    await desk.waitForSelector("#detail .elpic.ba");
+    assert.match(await desk.textContent('#detail [data-sect="elements"]'), /2 changed[\s\S]*1 new[\s\S]*Today[\s\S]*Calm/);
+    assert.equal(await desk.locator('#detail .eltile .bap iframe[data-snip-asset="A-now"][data-snip-sel="#card"]').count(), 1, "a part cut from the drawing of today");
+    assert.equal(await desk.locator('#detail .eltile .bap iframe[data-snip-asset="A-now"][data-snip-sel="#label"]').count(), 1, "else cut from the drawing");
+    assert.match(await desk.textContent("#detail .eltile:nth-child(3) .bap.none"), /Not in the product today/);
+    // The whole screen: the slider first, side by side on a press; off again gives the option alone.
+    assert.equal(await desk.locator('#detail [data-slider] iframe[data-pane-asset="A-now"]').count(), 1);
+    await desk.click('[data-cmp-view="side"]');
+    await desk.waitForSelector('#detail .split iframe[data-pane-asset="A-now"]');
+    assert.equal(await desk.locator("#detail .split #variant-frame").count(), 1);
+    await desk.click("[data-cmp-mode]");
+    await desk.waitForSelector("#detail #variant-frame:not(.split #variant-frame)");
+    assert.equal(await desk.locator("#detail .elpic.ba, #detail [data-slider], #detail .split").count(), 0);
+  } finally {
+    await run.close();
+  }
+});
+
+
+test("simple mode shows none of it: no section of today, no Compare with today, each option's own elements", async (t) => {
+  const me = 'role: "designer", email: "alice@example.com", simple: true, screens: true, can: { comment: true, change: true }';
+  for (const status of ["triage", "feedback"]) {
+    const bridge = bridgeToday({ me }).replace('status: "feedback"', `status: "${status}"`).replace(/now: \{ asset: "A-now"[^\n]*\n/, `${NOW_SHOTS}\n`);
+    const run = await launch(t, bridge);
+    if (!run) return;
+    const { desk } = run;
+    try {
+      await desk.click('[data-card="r7"]');
+      await desk.waitForSelector("#detail .eltile");
+      assert.equal(await desk.locator('#detail [data-sect="today"]').count(), 0, `no How it looks today in ${status}`);
+      assert.equal(await desk.locator("[data-cmp-mode], #detail .elpic.ba, #detail [data-slider]").count(), 0, "no Compare with today");
+      assert.equal(await desk.locator("#detail .elhow, #detail .eltile.elgap").count(), 0, "the tiles as before");
+      assert.equal(await desk.locator("[data-split-now]").count(), 0, "pictures from the product are no drawing to set beside an option");
+    } finally {
+      await run.close();
+    }
+  }
+});

@@ -306,6 +306,37 @@ pictures right under it, before and after side by side as on its own page (the l
 first pair with both, else its first picture as the after). The texts stay on the change's page.
 **← History** closes the period.
 
+## How it looks today
+
+A request's screen as it is in the product (`now`, [requests.md](requests.md) → How it looks
+today), in a section of its own under what Design Desk found, before the design options. Full
+mode only: simple mode shows neither this section nor **Compare with today**, and its
+**All elements** keeps each option's own parts, as before.
+
+- It is **open while the request is in Checking** and folded at every later stage; a person's
+  own fold or unfold holds while the page is open. While Design Desk takes it, the section says
+  so; a checked request without one offers **Take how it looks today** to a person who may start options.
+- The screen, at full width of its column, with each of the request's parts (`shared_elements`)
+  outlined and numbered on it; beside it the same parts in a list, each cut on its own with
+  what the request needs of it. A part the product does not have yet is **Not in the product
+  today**. Several screens are tabs over the picture.
+- The line under the picture says where it comes from: "The product at main (<commit>), with
+  made-up data" for pictures taken from the product, shown first; "Redrawn from the code by
+  Design Desk" for the drawing, shown only when there are none.
+
+### Compare with today
+
+A switch, **Compare with today**, beside the **Design options** heading while the request has how
+it looks today: it is about every option, not the one shown. Off by default; it holds across
+options and requests while the page is open. On:
+
+- **All elements**: each tile shows the part **Today** beside the option's, an arrow between
+  them; a part the option adds shows **Not in the product today**. Over the tiles, how much of
+  today the option changes: *n changed*, *n new*, *n as today*, *n left out*.
+- **The design**: **◧ Slider** (the default) lays the option and today's drawing on one
+  another, a handle to drag between them; **⇆ Side by side** sets today on the left. With the
+  pictures from the product alone (no drawing), side by side is the only one.
+
 ## A request's state in the list
 
 In both modes, each request in the list shows its state as a dot in the row's top-right corner,
