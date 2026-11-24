@@ -163,7 +163,7 @@ worklist does not need it; what a run does on the Desk is in [desk.md](desk.md).
   GitHub, in the profile's repository (`repos`); a Desk number with no item says so.
 - **The menu.** **Requests** leads it (its count amber while one waits for an
   answer); **PR Changes** (the product's shipped changes, key `new`) and **Issues** follow, every
-  tab alike, only the open one marked, every count grey, then **Product** and **People**; **+ New request** follows behind one more
+  tab alike, only the open one marked, every count grey, then **Product**, **People** and, for an admin, **Settings** ([desk.md](desk.md) → Settings); **+ New request** follows behind one more
   separator. The bell at the far right, after the person's name, opens
   [Notifications](#notifications). **How it works** opens from the question
   mark next to the day and night switch, with a picture each of how a request, an issue and a
@@ -172,7 +172,7 @@ worklist does not need it; what a run does on the Desk is in [desk.md](desk.md).
   them to every device; the browser keeps a copy named for them only to open without a flash, marked unsaved until
   the server takes it, and sent again on the next load.
   **Simple mode**, a switch in the menu under the person's name (an on/off switch beside its
-  words, in the accent when on), only hides: **Designs**, **Issues**, **Product** and **People** leave the menu (a sent
+  words, in the accent when on), only hides: **Designs**, **Issues**, **Product**, **People** and **Settings** leave the menu (a sent
   request offers no **Show the design**), Product's pages their bar, the presentation leaves Requests (its page, its buttons on a card and in an intro), a
   request offers no **Build a live prototype** (a prototype already up still shows), and an
   option shows no **Why it looks like this** section (the design workspace keeps it

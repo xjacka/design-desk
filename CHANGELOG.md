@@ -7,6 +7,16 @@ why lives in the PR and commit history, not here. Consumed by the version check
 ([docs/persistence.md](docs/persistence.md) → **Definition version & upgrade**);
 authoring rules: [docs/self-modification.md](docs/self-modification.md) §12.
 
+## 1.103.0 — 2026-11-24
+
+**Upgrade:**
+1. Restart the Desk server ([desk.md](docs/desk.md) → Server): it answers `GET` and
+   `POST /api/settings`, an admin's Settings, and writes those keys to `work/CONFIG.md` itself
+   ([desk.md](docs/desk.md) → Settings). Then republish the page ([desk.md](docs/desk.md) →
+   Publishing the page): an admin sees **Settings** beside People. No data migration.
+2. Rewrite and republish the agent manifest ([manifest.md](docs/manifest.md)): its trust line
+   now says the Desk's admins change settings too.
+
 ## 1.102.0 — 2026-11-23
 
 **Upgrade:**

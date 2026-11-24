@@ -23,6 +23,11 @@ function shim() {
   const q = new URLSearchParams(location.search);
   const role = q.get("role") || "designer";
   const me = { role, email: "alice@example.com", emails: ["alice@example.com", "alice@slack.example.com"], names: { "alice@example.com": "Alice Novak", "alice@slack.example.com": "Alice Novak", "pat@example.com": "Pat Lee" }, name: "Alice Novak", my_name: "Alice Novak", can: CAN[role] || CAN.designer, figma: true, theme: q.get("theme") || "light", due_days: 21, auto_days: 14 };
+  // The Desk's settings as work/CONFIG.md would give them (docs/config.md), defaults and a few turned on.
+  const settings = { watch_open_prs: "enabled", ci_gate: "enabled", ci_gate_unsourced: "disabled", review_post: "disabled", change_due_days: "21", change_auto_handled_days: "14",
+    proposals: "enabled", max_proposals_per_week: "3", spec_review: "enabled", issue_writeback: "enabled", handoff: "desk", max_prototypes: "2", prototype_expiry_days: "7",
+    notify: "disabled", bug_reports: "enabled", slack_polls: "enabled", slack_send: "disabled", slack_council: "disabled", slack_stale_days: "0", digest: "desk",
+    figma: "enabled", screens: "enabled", issue_news: "disabled", desk_ping: "enabled", decisions_page: "off", mcp_satellite: "disabled" };
   const cards = structuredClone(CARDS), notes = structuredClone(NOTES);
   const now = () => new Date().toISOString();
   const card = (id) => cards.find((c) => c.id === id);
@@ -44,6 +49,12 @@ function shim() {
   const answer = (method, path, body) => {
     const p = path.replace(/\?.*$/, ""), m = (re) => p.match(re);
     if (p === "/api/me") return me;
+    // Settings (docs/config.md): the Desk's keys, kept while the mock runs; only an admin changes them.
+    if (p === "/api/settings" && method === "GET") return role === "admin" ? { values: { ...settings }, editable: true } : { error: "Only an admin can change the settings." };
+    if (p === "/api/settings" && method === "POST") {
+      if (role !== "admin") return { error: "Only an admin changes settings." };
+      settings[body.key] = String(body.value); return { key: body.key, value: settings[body.key] };
+    }
     if (p === "/api/cards" && method === "GET") return { cards: list() };
     if (p.startsWith("/api/assets/")) return ASSETS[decodeURIComponent(p.slice(12))] || {};
     if (p === "/api/agenda") return { agenda: [] };
