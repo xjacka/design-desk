@@ -768,6 +768,10 @@
   .thumbs { display: flex; gap: 8px; flex-wrap: wrap; } .thumbs img { height: 64px; border-radius: var(--r-sm); border: 1px solid var(--line); }
   /* Choices read as a table: the button, the name and its hint each in a column of their own. */
   .choices { display: grid; gap: 8px; } .choices label { display: flex; gap: 8px; align-items: center; color: var(--ink); font-size: var(--fs-ui); }
+  .cf-routes-h { margin: 12px 0 6px; font-weight: 600; }
+  #cf-routes { grid-template-columns: auto minmax(0, max-content) minmax(0, 1fr); gap: 8px 12px; align-items: baseline; }
+  #cf-routes label { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: baseline; }
+  #cf-routes label .sub { margin: 0; }
   #cf-choices { grid-template-columns: auto minmax(0, max-content) minmax(0, 1fr); gap: 8px 12px; align-items: baseline; }
   #cf-choices label { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: baseline; }
   #cf-choices label .sub { margin: 0; } .choices input { width: auto; } .choices .rn { white-space: nowrap; flex: none; }
@@ -1101,6 +1105,8 @@
   .step.done .n { background: var(--ink); color: var(--panel); box-shadow: none; }
   .step.now .n { background: none; color: var(--ink); box-shadow: inset 0 0 0 2px var(--ink); }
   /* Approve is the one green button. */
+  .btn[data-pr-approve] { background: var(--approved); border-color: var(--approved); color: var(--panel); }
+  .btn[data-pr-approve]:hover { opacity: .88; background: var(--approved); }
   .btn[data-act="approve"] { background: var(--approved); border-color: var(--approved); color: var(--panel); }
   .btn[data-act="approve"]:hover { opacity: .88; background: var(--approved); }
   /* Design options: the tabs stay; each carries a square number, so "option 2" is easy to say. */
@@ -1776,6 +1782,7 @@
     <h2 id="cf-title"></h2>
     <div id="cf-body" class="md"></div>
     <div id="cf-choices" class="choices"></div>
+    <div id="cf-routes-wrap" hidden><p class="cf-routes-h" id="cf-routes-label"></p><div id="cf-routes" class="choices"></div></div>
     <label id="cf-note-wrap" hidden><span id="cf-note-label"></span><textarea name="note" maxlength="500"></textarea></label>
     <label id="cf-url-wrap" hidden><span id="cf-url-label"></span><input name="url" maxlength="500" /></label>
     <label id="cf-check-wrap" class="check" hidden><input type="checkbox" name="check" /> <span id="cf-check-label"></span></label>
@@ -2719,6 +2726,18 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
   S.gh = {};
   // The issue or pull request of a request's last earlier send, with its state and assignees as
   // the Desk last read them, for a new send that may close it (docs/handoff.md, step 6).
+  // Where a request's spec goes on GitHub (docs/handoff.md → Where it goes): back to the issue or
+  // the open pull request it came from as a comment (first, the default), a new issue, or straight
+  // to the coding agent. A comment and an issue read differently: the spec is written in that form.
+  function routesOf(c) {
+    const out = [], iss = c.from_issue, pr = c.from_pr;
+    if (iss && S.me?.issue_writeback) out.push({ id: "issue-comment", name: `As a comment on issue #${iss.issue}`, hint: "The design goes back to the issue it came from, as one comment, where its developers read it." });
+    if (pr) out.push({ id: "pr-comment", name: `As a comment on PR #${pr.pr}`, hint: "Its author changes the pull request it came from; Design Desk checks it again after the push." });
+    out.push({ id: "issue", name: "As a new issue for developers", hint: "A developer picks it up and builds it from the spec and the design." },
+      { id: "agent", name: "Straight to the coding agent", hint: "The issue gets the coding agent's label, so it starts building; you follow its pull request here." });
+    return out;
+  }
+  const routeDefault = (c, routes) => routes.find((r) => r.id === (c.spec?.target || c.approved?.target))?.id || (routes[0].id.endsWith("comment") ? routes[0].id : c.approved?.implement ? "agent" : "issue");
   async function earlierIssue(c) {
     const s = (c.sends || []).slice(-1)[0], url = s?.spec?.issue_url || s?.spec?.pr_url, ref = ghRef(url);
     if (!ref) return null;
@@ -2892,7 +2911,7 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
   // `choices` the ids ticked; OK waits until one is.
   // `url` is a one-line field's label (a link, or a name with `value` filled in and `max` its length).
   // noteFor: the note shows only while that choice is picked.
-  function ask({ title, body, ok, choices = null, pick = null, multi = false, note = null, noteFor = null, url = null, value = "", max = 500, check = null, checked = false, check2 = null, check3 = null, send }) {
+  function ask({ title, body, ok, choices = null, pick = null, multi = false, note = null, noteFor = null, url = null, value = "", max = 500, check = null, checked = false, check2 = null, check3 = null, routes = null, routePick = null, routesLabel = "", send }) {
     const dlg = $("#confirm-dialog"), f = $("#confirm-form");
     f.reset();
     $("#cf-title").textContent = title;
@@ -2905,6 +2924,8 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
     okBtn.disabled = none(); $("#cf-choices").onchange = () => { okBtn.disabled = none(); $("#cf-note-wrap").hidden = noteHidden(); };
     $("#cf-note-wrap").hidden = noteHidden(); $("#cf-note-label").textContent = note || "";
     $("#cf-url-wrap").hidden = !url; $("#cf-url-label").textContent = url || ""; f.url.required = Boolean(url); f.url.value = value; f.url.maxLength = max;
+    $("#cf-routes-wrap").hidden = !routes; $("#cf-routes-label").textContent = routesLabel;
+    $("#cf-routes").innerHTML = routes ? routes.map((r) => `<label><input type="radio" name="route" value="${esc(r.id)}" ${r.id === routePick ? "checked" : ""} required /><span class="cn">${esc(r.name)}</span>${r.hint ? `<span class="sub">${esc(r.hint)}</span>` : ""}</label>`).join("") : "";
     $("#cf-check-wrap").hidden = !check; $("#cf-check-label").textContent = check || ""; f.check.checked = Boolean(check && checked);
     $("#cf-check2-wrap").hidden = !check2; $("#cf-check2-label").textContent = check2 || ""; f.check2.checked = false;
     $("#cf-check3-wrap").hidden = !check3; $("#cf-check3-label").textContent = check3 || ""; f.check3.checked = false;
@@ -2912,7 +2933,7 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
     return new Promise((resolve) => {
       dlg.onclose = async () => {
         if (dlg.returnValue !== "ok") { resolve(null); return; }
-        const answer = { choice: f.querySelector("input[name=choice]:checked")?.value || null, choices: [...f.querySelectorAll("input[name=choice]:checked")].map((i) => i.value), note: f.note.value.trim(), url: f.url.value.trim(), check: f.check.checked, check2: f.check2.checked, check3: f.check3.checked };
+        const answer = { choice: f.querySelector("input[name=choice]:checked")?.value || null, choices: [...f.querySelectorAll("input[name=choice]:checked")].map((i) => i.value), note: f.note.value.trim(), url: f.url.value.trim(), check: f.check.checked, check2: f.check2.checked, check3: f.check3.checked, route: f.querySelector("input[name=route]:checked")?.value || null };
         try { resolve(await sendOrReopen(dlg, () => send(answer))); } catch (e) { fail(e); }
       };
     });
@@ -4536,7 +4557,9 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
         const size = can("size") && !handledAt(c) && c.status !== "archived" ? (forOf(c) === "developers" ? `<button class="btn small" data-size="designer">For Designers</button>` : `<button class="btn small" data-size="small">For Developers</button>`) : "";
         // As on an issue: the design action first and primary, Mark handled after it.
         const adjust = hasRequest(c) ? "" : (can("follow-up") && !handledAt(c) ? `<button class="btn primary" data-adjust>Adjust the design</button>` : can("follow-up") ? `<button class="btn" data-adjust>Adjust the design</button>` : "");
-        return ghStatus(o, word, tip, meta, adjust + handle, agendaButton(c) + size, { pill, inline: true });
+        // Approve, on an open pull request: handled, and the pull request gets a comment that it is a design approval only (docs/watch.md → Design approval).
+        const approve = mayHandle(c) && !handledAt(c) && src.pr && !src.merged_at && c.status !== "archived" ? `<button class="btn" data-pr-approve title="Approve the design of this change: it is marked handled, and the pull request gets a comment that it is a design approval only">Approve</button>` : "";
+        return ghStatus(o, word, tip, meta, adjust + approve + handle, agendaButton(c) + size, { pill, inline: true });
       })()}
       ${c.summary ? `<p class="lead">${txt(c.summary)}</p>` : ""}
       ${c.builds ? `<div class="sent"><b>Builds a design from Design Desk</b><p>This pull request builds <button class="anchor" data-card="${esc(c.builds.card)}">${esc(c.builds.title)}</button>${num({ id: c.builds.card })}${c.builds.url && ghRef(c.builds.url) && !ghRef(c.builds.url).pr ? `, sent to developers as <a href="${safeUrl(c.builds.url)}" target="_blank" rel="noopener noreferrer">Issue #${esc(ghRef(c.builds.url).n)} ↗</a>` : ""}; its design and spec are there.</p></div>` : ""}
@@ -7467,12 +7490,15 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
       // From a pull request still open, the spec waits too: Send to developers picks a new issue or a comment on it.
       const unread = Boolean(S.me?.spec_review) && c.origin?.channel !== "slack" && !c.from_pr;
       const waits = Boolean(S.me?.spec_review || c.from_pr);
-      res = await ask({ title: options.length ? "Approve a design" : "Approve without design options", body: `${waits ? `Design Desk writes the developer spec for ${what}. It waits here for you to read and edit; nothing goes to ${to} until you press **Send to developers**${c.from_pr ? `, where you pick a new issue or a comment on PR #${c.from_pr.pr}` : ""}${unread ? ", unless you tick the box below" : ""}.` : `Design Desk writes the developer spec for ${what} and sends it to ${to}. Once sent, it can't be taken back.`}${against.length ? `\n\n⚠ **It goes against ${against.join(", ")}.** Approve it only if the team means to; then revoke the decision, or Design Desk records this approval as going against it.` : ""}${earlier ? `\n\n${earlier.line}` : ""}`, ok: "Approve", choices: options.length && !built ? options : null, pick: options.length === 1 ? options[0].id : null, note: options.length ? null : "What should developers build? (optional)",
+      // From an issue or an open pull request, where it goes is asked here: the spec is written in that form.
+      const routes = github && (c.from_pr || (c.from_issue && S.me?.issue_writeback)) ? routesOf(c) : null;
+      res = await ask({ title: options.length ? "Approve a design" : "Approve without design options", body: `${waits ? `Design Desk writes the developer spec for ${what}. It waits here for you to read and edit; nothing goes to ${routes ? "GitHub" : to} until you press **Send to developers**${unread ? ", unless you tick the box below" : ""}.` : `Design Desk writes the developer spec for ${what} and sends it to ${routes ? "GitHub, where you pick below" : to}. Once sent, it can't be taken back.`}${against.length ? `\n\n⚠ **It goes against ${against.join(", ")}.** Approve it only if the team means to; then revoke the decision, or Design Desk records this approval as going against it.` : ""}${earlier ? `\n\n${earlier.line}` : ""}`, ok: "Approve", choices: options.length && !built ? options : null, pick: options.length === 1 ? options[0].id : null, note: options.length ? null : "What should developers build? (optional)",
         ...(against.length ? { check: `I know it goes against ${against.join(", ")}` } : {}),
-        ...(github && !waits ? { check2: `Straight to implementation: the spec goes on ${to.startsWith("the GitHub issue it came from") ? "that issue" : "a GitHub issue (a new one, with the spec and pictures, if none is filed)"} with the coding agent's label, when its manifest names one` } : {}),
+        ...(routes ? { routes, routePick: routeDefault(c, routes), routesLabel: "Where should the spec go? Design Desk writes it in that form." } : {}),
+        ...(github && !routes && !waits ? { check2: `Straight to implementation: the spec goes on ${to.startsWith("the GitHub issue it came from") ? "that issue" : "a GitHub issue (a new one, with the spec and pictures, if none is filed)"} with the coding agent's label, when its manifest names one` } : {}),
         ...(unread ? { check2: `Send it to ${to} as soon as the spec is written, without waiting for me to read it. Once sent, it can't be taken back` } : {}),
         ...(earlier?.open ? { check3: unread ? `${earlier.check} (only with the box above ticked; else you pick it when you send)` : earlier.check } : {}),
-        send: (a) => post(built?.id || a.choice || a.note || "", { ...(against.length ? { overrule: a.check } : {}), ...(a.check2 ? (unread ? { auto_send: true } : { implement: true }) : {}), ...(a.check3 && (!unread || a.check2) ? { close_earlier: true } : {}) }) });
+        send: (a) => post(built?.id || a.choice || a.note || "", { ...(against.length ? { overrule: a.check } : {}), ...(a.check2 ? (unread ? { auto_send: true } : { implement: true }) : {}), ...(a.route ? { target: a.route } : {}), ...(a.check3 && (!unread || a.check2) ? { close_earlier: true } : {}) }) });
       if (!res) return;
     }
     // Build: pick the option, then look at its latest version and states once more in the
@@ -7844,6 +7870,12 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
     if ("pcomment" in ds) { await presentComment(); return; }
     if ("exitPresent" in ds) { $("#present")?.remove(); return; }
     if ("ack" in ds) { await api("POST", `/api/cards/${S.card.id}/ack`); await refreshList(); await openCard(S.card.id); return; }
+    if ("prApprove" in ds) {
+      const c = S.card, r = await ask({ title: `Approve the design of PR #${c.source?.pr}?`, body: `It is marked handled here${c.ci ? ", and Design Desk's check on the pull request passes" : ""}. Design Desk adds one comment to the pull request: **Design approval only** — the design of this change is approved on the Design Desk; it is not a code review and approves no code.`, ok: "Approve",
+        send: () => api("POST", `/api/cards/${c.id}/handled`, { handled: true, approve: true }) });
+      if (r) { toast("Approved. Design Desk adds the comment to the pull request."); await refreshList(); await openCard(c.id); }
+      return;
+    }
     if ("handle" in ds) { await api("POST", `/api/cards/${S.card.id}/handled`, { handled: ds.handle === "1" }); await refreshList(); await openCard(S.card.id); return; }
     if ("adjust" in ds) { openRequestDialog(S.card); return; }
     if ("addShots" in ds) { openShotsDialog(); return; }
@@ -7875,18 +7907,17 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
       const c = S.card, route = S.me?.handoff?.[c.request?.type || "idea"] || "github";
       // Sent before and reopened: the new issue may close the earlier one (docs/handoff.md, step 6).
       const earlier = route === "desk" ? null : await earlierIssue(c);
-      const choices = route === "desk" ? null : [
-        { id: "issue", name: "As an issue for developers", hint: "A developer picks it up and builds it from the spec and the design." },
-        { id: "agent", name: "Straight to the coding agent", hint: "The issue gets the coding agent's label, so it starts building; you follow its pull request here." },
-        // It came from a pull request still open: the spec may go back to it as a comment (docs/handoff.md).
-        ...(c.from_pr ? [{ id: "comment", name: `As a comment on PR #${c.from_pr.pr}`, hint: "Its author changes the pull request it came from; Design Desk checks it again after the push." }] : [])];
+      const choices = route === "desk" ? null : routesOf(c);
+      // Written as a comment and sent as an issue, or the other way: Design Desk rewrites it first (docs/handoff.md → Where it goes).
+      const form = (t) => (String(t || "").endsWith("comment") ? "comment" : "issue"), written = c.spec?.target;
+      const rewrite = written && choices ? `\n\nThe spec is written as ${form(written) === "comment" ? "a comment" : "an issue"}. Pick ${form(written) === "comment" ? "a new issue or the coding agent" : "a comment"} and Design Desk rewrites it in that form first; it comes back here to read.` : "";
       const r = await ask({ title: route === "desk" ? "Mark the spec ready for developers" : "Send the spec to developers",
         body: route === "desk" ? `This Desk keeps the spec of ${c.request?.type === "proposal" ? "a proposal" : "an idea"} here: developers read it on the Desk, and nothing goes to GitHub. To have it filed on GitHub instead, ask ${contact()} to change where ideas go (the \`handoff\` setting).`
-          : `Design Desk sends the spec as it is now, with the approved design, its pictures and states, to GitHub.${earlier ? `\n\n${earlier.line}` : ""}`,
-        ok: route === "desk" ? "Mark ready" : "Send to developers", choices, pick: choices ? (c.from_pr ? "comment" : c.approved?.implement ? "agent" : "issue") : null,
+          : `Design Desk sends the spec as it is now, with the approved design, its pictures and states, to GitHub.${rewrite}${earlier ? `\n\n${earlier.line}` : ""}`,
+        ok: route === "desk" ? "Mark ready" : "Send to developers", choices, pick: choices ? routeDefault(c, choices) : null,
         ...(earlier?.open ? { check3: earlier.check } : {}),
-        send: (a) => api("POST", `/api/cards/${S.card.id}/spec`, { action: "send", ...(choices ? { implement: a.choice === "agent", comment: a.choice === "comment" } : {}), ...(a.check3 ? { close_earlier: true } : {}) }) });
-      if (r) { toast("The spec is on its way to developers."); await openCard(S.card.id); await refreshList(); }
+        send: (a) => api("POST", `/api/cards/${S.card.id}/spec`, { action: "send", ...(choices ? { target: a.choice } : {}), ...(a.check3 ? { close_earlier: true } : {}) }) });
+      if (r) { toast(r.rewrite ? "Design Desk rewrites the spec in that form; it comes back here to read." : "The spec is on its way to developers."); await openCard(S.card.id); await refreshList(); }
       return;
     }
     if ("endVote" in ds) {

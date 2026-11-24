@@ -127,6 +127,8 @@ function settings() {
     // Whether a person reads and sends the spec (docs/handoff.md → Review before it goes): then
     // they pick its route at Send, not at Approve.
     specReview: cfg("spec_review", "enabled") !== "disabled",
+    // Whether a design may go back to the issue it came from, as a comment (docs/handoff.md → Where it goes).
+    issueWriteback: cfg("issue_writeback", "enabled") !== "disabled",
     // Where an approved design goes, by request type, so the page can say it before approving.
     handoff: {
       feature: cfg("issue_writeback", "enabled") === "disabled" ? "desk" : "issue-comment",
@@ -134,6 +136,16 @@ function settings() {
       idea: ideas, proposal: ideas,
     },
   };
+}
+
+// Where a spec goes, picked on Approve or Send (docs/handoff.md → Where it goes): only where it
+// reaches GitHub, and back to its issue only with `issue_writeback` on; the store checks the rest.
+function sendTarget(s, id, target) {
+  if (target == null) return null;
+  if (typeof target !== "string") throw new DeskError(400, "target must be a string");
+  if ((s.handoff[store.card(id).request?.type || "idea"] || "desk") === "desk") throw new DeskError(400, "This request's spec stays on the Desk: it goes nowhere on GitHub.");
+  if (target === "issue-comment" && !s.issueWriteback) throw new DeskError(400, "Designs do not go back to their issues on this Desk (issue_writeback).");
+  return target;
 }
 
 // The words a person reads when their role lacks an action.
@@ -221,7 +233,7 @@ async function viewerRoute(req, res, url, who) {
     // The page asks who it is once, when it loads: that is the sign-in People reads (docs/desk.md → People).
     // A read never fails for it: a full store keeps no record, and a failed write is dropped.
     try { if (!store.full()) store.markOpened(actor); } catch {}
-    return send(res, 200, { email: who.email, emails: who.emails, my_name: rowOf(who.email)?.name || null, names: namesOf(roster()), key: who.email || who.sub, role: who.deskRole, theme: store.prefsOf(actor).theme, simple: store.prefsOf(actor).simple, figma_pref: store.prefsOf(actor).figma, platformRole: who.role, can: canAll(who.deskRole, s), pings: s.ping && who.deskRole !== "guest", name: s.name, repo: s.repo, contact: s.contact, figma: s.figma, slack: s.slack, slack_send: s.slackSend, screens: s.screens, handoff: s.handoff, spec_review: s.specReview, due_days: s.dueDays, auto_days: s.autoDays, env_days: s.envDays, link: s.link, skills: offerSkills(s.figma), mcp: s.mcp });
+    return send(res, 200, { email: who.email, emails: who.emails, my_name: rowOf(who.email)?.name || null, names: namesOf(roster()), key: who.email || who.sub, role: who.deskRole, theme: store.prefsOf(actor).theme, simple: store.prefsOf(actor).simple, figma_pref: store.prefsOf(actor).figma, platformRole: who.role, can: canAll(who.deskRole, s), pings: s.ping && who.deskRole !== "guest", name: s.name, repo: s.repo, contact: s.contact, figma: s.figma, slack: s.slack, slack_send: s.slackSend, screens: s.screens, handoff: s.handoff, spec_review: s.specReview, issue_writeback: s.issueWriteback, due_days: s.dueDays, auto_days: s.autoDays, env_days: s.envDays, link: s.link, skills: offerSkills(s.figma), mcp: s.mcp });
   }
   // Who is on the Desk and what each role may do; only people the owner shared the Desk with get here.
   if (m === "GET" && p[1] === "people") { const ppl = roster(); return send(res, 200, { people: ppl, activity: store.peopleActivity(ppl), roles: Object.fromEntries(ROLES.map((r) => [r, canAll(r, s)])), asks: store.peopleAsks(), addable: ADDABLE_ROLES }); }
@@ -279,7 +291,7 @@ async function viewerRoute(req, res, url, who) {
   if (m === "POST" && p[1] === "cards" && p[3] === "presented") return send(res, 200, store.markPresented(p[2], actor, b.presented !== false));
   if (m === "POST" && p[1] === "cards" && p[3] === "ack") { need("ack"); return send(res, 200, store.ack(p[2], actor)); }
   if (m === "POST" && p[1] === "cards" && p[3] === "built") { need("built"); return send(res, 200, store.markBuilt(p[2], actor, b.built !== false)); }
-  if (m === "POST" && p[1] === "cards" && p[3] === "handled") { if (!can(who.deskRole, "handle-small", s.prototypeRoles)) need("handle"); return send(res, 200, store.handle(p[2], actor, b.handled !== false)); }
+  if (m === "POST" && p[1] === "cards" && p[3] === "handled") { if (!can(who.deskRole, "handle-small", s.prototypeRoles)) need("handle"); return send(res, 200, store.handle(p[2], actor, b.handled !== false, { approve: b.approve === true })); }
   // A difference from Figma taken off an item's table, or brought back (docs/desk.md → Differences from Figma).
   if (m === "POST" && p[1] === "cards" && p[3] === "figma-close") { need("handle"); if (!s.figma) throw new DeskError(400, "Figma is not connected to this Desk yet."); return send(res, 200, store.closeFigma(p[2], actor, b.on !== false)); }
   if (m === "POST" && (p[1] === "cards" || p[1] === "decisions") && p[3] === "figma-dismiss") { need("handle"); if (!s.figma) throw new DeskError(400, "Figma is not connected to this Desk yet."); return send(res, 200, store.dismissFigma(p[2], actor, b.part, b.on !== false)); }
@@ -318,7 +330,7 @@ async function viewerRoute(req, res, url, who) {
   if (m === "POST" && p[1] === "cards" && p[3] === "feedback") return send(res, 200, store.openFeedback(p[2], actor));
   if (m === "POST" && p[1] === "cards" && p[3] === "end-vote") return send(res, 200, store.endVote(p[2], actor));
   // The developer spec, read before it goes: edit it, ask for changes, or send it (docs/handoff.md).
-  if (m === "POST" && p[1] === "cards" && p[3] === "spec") { const r = store.specAction(p[2], actor, { action: b.action, text: b.text, note: b.note, implement: typeof b.implement === "boolean" ? b.implement : null, closeEarlier: b.close_earlier === true, comment: b.comment === true }); return send(res, 200, r.inbox ? withPing(r, s, who) : r); }
+  if (m === "POST" && p[1] === "cards" && p[3] === "spec") { const r = store.specAction(p[2], actor, { action: b.action, text: b.text, note: b.note, implement: typeof b.implement === "boolean" ? b.implement : null, closeEarlier: b.close_earlier === true, comment: b.comment === true, target: sendTarget(s, p[2], b.target) }); return send(res, 200, r.inbox ? withPing(r, s, who) : r); }
   if (m === "POST" && p[1] === "cards" && p[3] === "size") { need("size"); return send(res, 200, store.setSize(p[2], actor, b.small)); }
   // An approved design's elements into Product → Elements (docs/catalog.md → From approved designs).
   if (m === "POST" && p[1] === "cards" && p[3] === "catalog") { need("add"); return send(res, 200, store.addDesignToCatalog(p[2], actor, typeof b.element === "string" ? b.element : "")); }
@@ -395,7 +407,7 @@ async function viewerRoute(req, res, url, who) {
     // Straight to implementation labels an issue: only where the approved spec reaches GitHub (docs/handoff.md, step 5).
     if (action === "approve" && b.implement === true && (s.handoff[store.card(p[2]).request?.type || "idea"] || "desk") === "desk") throw new DeskError(400, "This request's spec stays on the Desk, so it cannot go straight to the coding agent.");
     if (action === "slack-send" && !s.slackSend && store.card(p[2]).origin?.channel !== "slack") throw new DeskError(400, `Sending designs to Slack is not turned on for this Desk yet. Ask ${s.contact}.`);
-    return send(res, 200, withPing(store.act(p[2], actor, action, b.note, { askFirst: b.ask_first === true, count: b.count ?? null, overrule: b.overrule === true, implement: b.implement === true, closeEarlier: b.close_earlier === true, autoSend: b.auto_send === true,
+    return send(res, 200, withPing(store.act(p[2], actor, action, b.note, { askFirst: b.ask_first === true, count: b.count ?? null, overrule: b.overrule === true, implement: b.implement === true, closeEarlier: b.close_earlier === true, autoSend: b.auto_send === true, target: action === "approve" ? sendTarget(s, p[2], b.target) : null,
       variant: typeof b.variant === "string" ? b.variant : null, version: Number.isInteger(b.version) ? b.version : null,
       states: b.states && typeof b.states === "object" && !Array.isArray(b.states) ? b.states : null, part: b.part && typeof b.part === "object" ? b.part : null, element: typeof b.element === "string" ? b.element : null }), s, who));
   }

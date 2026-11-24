@@ -34,7 +34,7 @@ file is unchanged; exit 3 means another writer came first (an admin's roster row
   is `lead-developer`), `max_prototypes` (`2`; `0` = none),
   `prototype_expiry_days` (`7`), `spec_review` (`enabled`) — a person reads, edits and sends the developer spec before it leaves the Desk ([handoff.md](handoff.md) → Review before it goes; `disabled`: it goes on its own, save a request from Slack), `prototype_remote` (`none` | the repo a prototype branch
   is pushed to); `handoff` — `desk` (default) | `issue` | `draft-pr`, for ideas and
-  proposals; `issue_writeback` (`enabled`) — a feature's design goes back into its issue;
+  proposals; `issue_writeback` (`enabled`) — a feature's design goes back into its issue, and a request from an issue may send its spec there as a comment ([handoff.md](handoff.md) → Where it goes);
   `implementer` — `pr-comment` (default) | `issue`, how an adjustment or a bug reaches the
   coding agent; `implementer_mention` — its handle, the comment's first line (empty: none).
 - `desk_ping` (`enabled`) — the page wakes you at once; `desk_artifact` — the Desk page's
