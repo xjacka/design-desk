@@ -13,7 +13,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync, chmodSync } from "n
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { join } from "node:path";
 import { Store, DeskError, forgetIdle, can, ROLES, ADDABLE_ROLES, abilities, rosterOf, readRole, personOf, namesOf, LOOK_ROLES } from "./store.mjs";
-import { cfg, cfgTable, WORK } from "../toolkit/lib/core.mjs";
+import { cfg, cfgTable, WORK, writeConfig, withConfigKey } from "../toolkit/lib/core.mjs";
 import { requestSkills } from "../toolkit/lib/actions.mjs";
 
 const PORT = Number(process.env.DESK_PORT || 5555);
@@ -95,6 +95,37 @@ function slackRole(email) {
   return ROLES.includes(role) && role !== "guest" ? role : "slack";
 }
 
+// Settings (docs/desk.md → Settings): the work/CONFIG.md keys an admin changes on the Desk, each
+// with its default (docs/config.md) and the values it takes. The server writes them itself, under
+// the config lock; nothing else in CONFIG.md is written from the page.
+const ON = ["enabled", "disabled"];
+const SETTABLE = {
+  watch_open_prs: ["enabled", ON], ci_gate: ["disabled", ON], ci_gate_unsourced: ["disabled", ON], review_post: ["disabled", ON],
+  change_due_days: ["21", [0, 365]], change_auto_handled_days: ["14", [0, 365]],
+  proposals: ["enabled", ON], max_proposals_per_week: ["3", [0, 20]], spec_review: ["enabled", ON], issue_writeback: ["enabled", ON],
+  handoff: ["desk", ["desk", "issue", "draft-pr"]], max_prototypes: ["2", [0, 10]], prototype_expiry_days: ["7", [1, 60]],
+  notify: ["disabled", ["disabled", "slack"]], bug_reports: ["enabled", ON], slack_polls: ["disabled", ON], slack_send: ["disabled", ON],
+  slack_council: ["disabled", ON], slack_stale_days: ["0", [0, 90]], digest: ["desk", ["desk", "slack", "disabled"]],
+  figma: ["disabled", ON], screens: ["disabled", ON], issue_news: ["disabled", ON], desk_ping: ["enabled", ON],
+  decisions_page: ["off", ["off", "dam"]], mcp_satellite: ["disabled", ["disabled", "when-awake", "always"]],
+};
+// A number key reads `off` as 0, as its readers do; a key's older spelling reads as its readers
+// read it (`decisions_page: public` is `dam`, scripts/preflight.sh), so the switch shows what runs.
+const ALIASES = { decisions_page: { public: "dam" } };
+const settingValues = () => Object.fromEntries(Object.entries(SETTABLE).map(([k, [d, ok]]) => {
+  const raw = cfg(k, d), v = ALIASES[k]?.[raw] || raw;
+  return [k, typeof ok[0] === "number" ? (v === "off" ? "0" : /^\d+$/.test(v) ? v : d) : ok.includes(v) ? v : d];
+}));
+function setSetting(key, value) {
+  const spec = Object.hasOwn(SETTABLE, key) ? SETTABLE[key] : null;
+  if (!spec) throw new DeskError(400, "That setting can't be changed here.");
+  const v = String(value ?? "").trim(), [, ok] = spec;
+  const fine = typeof ok[0] === "number" ? /^\d+$/.test(v) && Number(v) >= ok[0] && Number(v) <= ok[1] : ok.includes(v);
+  if (!fine) throw new DeskError(400, typeof ok[0] === "number" ? `A whole number from ${ok[0]} to ${ok[1]}.` : `One of: ${ok.join(", ")}.`);
+  writeConfig(WORK, (text) => withConfigKey(text, key, v));
+  return { key, value: v };
+}
+
 function settings() {
   const list = (v, d) => (v ? v.split(",").map((s) => s.trim()).filter(Boolean) : d);
   const admin = roster().find((r) => r.role === "admin");
@@ -152,7 +183,7 @@ function sendTarget(s, id, target) {
 const VERBS = { ack: "mark changes as seen", handle: "mark changes and issues as handled", "handle-small": "mark changes and issues For Developers as handled", ask: "ask questions", comment: "comment", vote: "vote", request: "send requests", "follow-up": "adjust a change",
   screens: "add screenshots", explore: "start design options", revise: "redraw options", build: "build live prototypes", approve: "approve designs", close: "close requests",
   reopen: "reopen requests", refresh: "update drawings", share: "share options in Slack", choose: "remove a design option from a request you did not file", queue: "add to the presentation", change: "note changes on an element", figma: "use Figma here", add: "add screens and parts to Product",
-  draw: "draw issues", decide: "record and revoke decisions", size: "move a request between For Developers and For Designers", skip: "decide without a vote or a live prototype", people: "add people to the Desk", resolve: "mark someone else's conversation done", designs: "see Designs", built: "mark designs done" };
+  draw: "draw issues", decide: "record and revoke decisions", size: "move a request between For Developers and For Designers", skip: "decide without a vote or a live prototype", people: "add people to the Desk", settings: "change the settings", resolve: "mark someone else's conversation done", designs: "see Designs", built: "mark designs done" };
 
 const canAll = (role, s) => abilities(role, s.prototypeRoles);
 
@@ -225,7 +256,7 @@ async function viewerRoute(req, res, url, who) {
     const verb = VERBS[action] || "do that";
     throw new DeskError(403, who.deskRole === "guest"
       ? `To ${verb}, ask ${s.contact} to add ${who.email || "you"} to the Desk's members.`
-      : `Only ${action === "people" ? "an admin" : action === "size" ? "lead developers and admins" : action === "skip" ? "designers, PMs and lead developers" : action === "close" || action === "reopen" ? "designers and PMs" : action === "built" ? "developers" : "designers"} can ${verb}. Ask ${s.contact} if you need it.`);
+      : `Only ${action === "people" || action === "settings" ? "an admin" : action === "size" ? "lead developers and admins" : action === "skip" ? "designers, PMs and lead developers" : action === "close" || action === "reopen" ? "designers and PMs" : action === "built" ? "developers" : "designers"} can ${verb}. Ask ${s.contact} if you need it.`);
   };
   const p = url.pathname.split("/").filter(Boolean); // ["api", ...]
   const m = req.method;
@@ -236,6 +267,8 @@ async function viewerRoute(req, res, url, who) {
     return send(res, 200, { email: who.email, emails: who.emails, my_name: rowOf(who.email)?.name || null, names: namesOf(roster()), key: who.email || who.sub, role: who.deskRole, theme: store.prefsOf(actor).theme, simple: store.prefsOf(actor).simple, figma_pref: store.prefsOf(actor).figma, platformRole: who.role, can: canAll(who.deskRole, s), pings: s.ping && who.deskRole !== "guest", name: s.name, repo: s.repo, contact: s.contact, figma: s.figma, slack: s.slack, slack_send: s.slackSend, screens: s.screens, handoff: s.handoff, spec_review: s.specReview, issue_writeback: s.issueWriteback, due_days: s.dueDays, auto_days: s.autoDays, env_days: s.envDays, link: s.link, skills: offerSkills(s.figma), mcp: s.mcp });
   }
   // Who is on the Desk and what each role may do; only people the owner shared the Desk with get here.
+  // Settings: an admin's page alone (docs/desk.md → Settings).
+  if (m === "GET" && p[1] === "settings") { need("settings"); return send(res, 200, { values: settingValues(), editable: true }); }
   if (m === "GET" && p[1] === "people") { const ppl = roster(); return send(res, 200, { people: ppl, activity: store.peopleActivity(ppl), roles: Object.fromEntries(ROLES.map((r) => [r, canAll(r, s)])), asks: store.peopleAsks(), addable: ADDABLE_ROLES }); }
   if (m === "GET" && p[1] === "cards" && !p[2]) return send(res, 200, { cards: store.listCards({ kind: url.searchParams.get("kind") || undefined, status: url.searchParams.get("status") || undefined, viewer: who.email || who.sub, who: actor }) });
   if (m === "GET" && p[1] === "cards" && p[2]) {
@@ -366,6 +399,8 @@ async function viewerRoute(req, res, url, who) {
     return send(res, 201, withPing(store.createRequest(actor, { title, problem, goal, screen, steps, type, from, screens, figma, vision, skills, options, grill, auto, audience, carry }), s, who));
   }
   // An admin asks for a new person on the list; the agent writes the row (docs/desk.md → People).
+  // An admin's change to one setting: written to work/CONFIG.md at once, no agent run needed.
+  if (m === "POST" && p[1] === "settings") { need("settings"); const r = setSetting(b.key, b.value); log("info", "settings", `${who.email || who.sub} set ${r.key}: ${r.value}`); return send(res, 200, r); }
   if (m === "POST" && p[1] === "people") { need("people"); return send(res, 201, withPing(store.askForPerson(actor, { email: b.email, role: b.role }, roster(), { owner: who.role === "owner" }), s, who)); }
   if (m === "POST" && p[1] === "product") {
     need("add");

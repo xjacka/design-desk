@@ -303,7 +303,7 @@ with spaces as hyphens (`Lead developer` → `lead-developer`).
 | `designer`, `admin` | also decide: approve (a design against a decision too), choose what the presentation shows and mark it presented, mark a change handled, remove an option from any request, record or approve a decision |
 | `lead-developer` | mark a change or an issue For Developers handled ([For Developers or For Designers](#for-developers-or-for-designers)) |
 | roles in `prototype_requesters` (default `designer`, `pm`, `admin`) | start a live prototype |
-| `admin` | also ask you to add a person to the list ([People](#people)) |
+| `admin` | also ask you to add a person to the list ([People](#people)), change the settings ([Settings](#settings)) |
 | `developer`, `lead-developer`, `admin` | see **Designs** in the menu, ask a design's designer, mark a design done ([Designs](#designs)) |
 
 The page's **People** tab shows the roster, each role's actions and an admin's asks to add
@@ -568,6 +568,20 @@ comments they wrote, votes they gave, requests they approved and decisions they 
 how many of those fell in each of the last 12 weeks. A private ask never counts, and what
 someone opened (`reads`) is never shown. A server that sends no `activity` (one older than the
 page) makes the row say it can't be shown right now, never zeros.
+
+## Settings
+
+An admin's page, beside People, alone in the menu for them: Design Desk's switches and numbers,
+in four groups (pull requests, requests, Slack, product and tools). A change is written to
+`work/CONFIG.md` by the Desk server itself, at once, with no inbox item and no agent run:
+`POST /api/settings {key, value}`, the `settings` ability (admin), under the config lock
+(`writeConfig`, `withConfigKey` in `toolkit/lib/core.mjs`). Only the keys in the server's
+`SETTABLE` list, each with the values [config.md](config.md) gives it (a number in its range);
+any other key or value is refused, so the roster, `repos`, the remotes and the rest stay the
+operator's. `GET /api/settings` gives each key's value with its default filled in. The server
+reads a key afresh on every request, so a key it serves (`figma`, `change_due_days` …) reaches
+the page on its next load; Design Desk works by a change from its next run.
+The server logs who set what (`settings` in its log).
 
 ## The presentation
 

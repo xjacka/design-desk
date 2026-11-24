@@ -86,7 +86,7 @@ export function can(role, action, prototypeRoles = ["designer", "pm", "admin"]) 
     // Record a decision from a comment, revoke one and restore it (docs/desk.md → Decisions).
     case "decide": return shaper;
     case "build": return prototypeRoles.includes(role);
-    case "people": return role === "admin";
+    case "people": case "settings": return role === "admin";
     // Designs: what was approved and sent, for developers to build and mark done (docs/desk-page.md → Designs).
     case "designs": case "built": return dev || role === "admin";
     default: return false;
@@ -108,7 +108,7 @@ export function forgetIdle(usage, now, writeWindowMs, max = 500) {
 }
 
 // Every action the page asks about: /api/me for its caller, /api/people for each role.
-export const ACTIONS = ["ack", "ask", "comment", "vote", "request", "follow-up", "explore", "revise", "build", "approve", "close", "reopen", "refresh", "history", "queue", "change", "figma", "screens", "share", "add", "handle", "handle-small", "choose", "draw", "decide", "size", "skip", "people", "designs", "built", "resolve"];
+export const ACTIONS = ["ack", "ask", "comment", "vote", "request", "follow-up", "explore", "revise", "build", "approve", "close", "reopen", "refresh", "history", "queue", "change", "figma", "screens", "share", "add", "handle", "handle-small", "choose", "draw", "decide", "size", "skip", "people", "designs", "built", "resolve", "settings"];
 export const abilities = (role, prototypeRoles) => Object.fromEntries(ACTIONS.map((a) => [a, can(role, a, prototypeRoles)]));
 
 // A role as written in `## Desk people` or `prototype_requesters`: lower case, inner spaces as

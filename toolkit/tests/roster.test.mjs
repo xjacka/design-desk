@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, utimesSync, writeFileSync, exists
 import { spawn } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { withRosterRow } from "../lib/core.mjs";
+import { withRosterRow, withConfigKey } from "../lib/core.mjs";
 import { personVerdict, addRosterRow } from "../bin/desk.mjs";
 
 const CONFIG = "- display_name: Desk\n\n## Desk people\n\n| email | role |\n| --- | --- |\n| lee@example.com | admin |\n\n## Skills\n\n| action | skill |\n";
@@ -95,4 +95,17 @@ test("the lock: a live holder's lock is waited for, never taken", async () => {
   utimesSync(lock, new Date(0), new Date(0));
   assert.throws(() => lockDir(lock, { timeoutMs: 300 }), /stayed locked/);
   assert.equal(existsSync(join(lock, `${process.pid}-live`)), true);
+});
+
+// An admin's key from the Desk's Settings (docs/desk.md → Settings): one bullet, nothing else.
+test("a setting replaces its bullet, keeping its comment, or goes after the last bullet", () => {
+  const c = "- display_name: Desk\n- ci_gate: disabled # on or off\n\n## Desk people\n\n| email | role |\n";
+  assert.equal(withConfigKey(c, "ci_gate", "enabled"), c.replace("ci_gate: disabled", "ci_gate: enabled"));
+  assert.equal(withConfigKey(c, "notify", "slack"), c.replace("# on or off\n", "# on or off\n- notify: slack\n"));
+  assert.equal(withConfigKey("", "notify", "slack"), "- notify: slack\n");
+});
+
+test("a setting refuses a key or a value that would write more than its own line", () => {
+  assert.throws(() => withConfigKey("", "Bad key", "x"), /not a key/);
+  for (const v of ["x\n- repos: evil/x", "a # b", "a | b"]) assert.throws(() => withConfigKey("", "notify", v), /cannot be a value/);
 });

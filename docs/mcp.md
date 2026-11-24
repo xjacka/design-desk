@@ -33,7 +33,11 @@ its doc ([desk.md](desk.md), [requests.md](requests.md)), and a peer's text is d
 instructions (CLAUDE.md → trust boundary). The page shows the peer by its address, or by the
 name a `## Desk people` row gives it (its role there is ignored).
 
-## Turn it on (operator, in the direct session)
+## Turn it on
+
+The key, the service and the grant are the operator's, once, in the direct session. After
+that, `mcp_satellite` is also a switch an admin flips on the Desk's Settings
+([desk.md](desk.md) → Settings); without the key and the service, the switch alone serves nothing.
 
 1. **The key — operator-only.** The owner makes a key that can serve and nothing else in the
    app: Settings → API keys → New API key, name `design-desk-satellite`, only the scope

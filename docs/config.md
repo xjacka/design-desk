@@ -9,7 +9,8 @@ worklist's `config`. A missing key takes its default.
 included: `design config sha` gives its fingerprint, edit a copy, then
 `design config write <copy> --from <sha>`. It writes under `work/.CONFIG.lock` only when the
 file is unchanged; exit 3 means another writer came first (an admin's roster row through
-`design desk person`): read the file again and redo the change.
+`design desk person`, or a key an admin set on the Desk's Settings, [desk.md](desk.md) →
+Settings): read the file again and redo the change.
 
 - `display_name` (`Design Desk`) — the Desk's title.
 - `repos` — comma-separated `[host/]owner/name` the watch reads (default `none`: no watch);

@@ -160,6 +160,23 @@ export function withRosterRow(text, email, role) {
   return lines.join("\n");
 }
 
+// One `- <key>: <value>` bullet set in CONFIG.md text: the first bullet of that key is
+// replaced (its trailing # comment kept), else the bullet goes after the last bullet before
+// the first `## ` table, else on top. Only a plain key and a one-line value go in.
+export function withConfigKey(text, key, value) {
+  if (!/^[a-z][a-z0-9_]*$/.test(String(key || ""))) throw new Error(`"${key}" is not a key`);
+  if (!/^[^\n\r#|`]*$/.test(String(value ?? "")) || String(value).length > 200) throw new Error(`"${value}" cannot be a value`);
+  const lines = text.split("\n");
+  const at = lines.findIndex((l) => new RegExp(`^- ${key}:`).test(l));
+  if (at >= 0) { const note = lines[at].match(/\s+#.*$/)?.[0] || ""; lines[at] = `- ${key}: ${value}${note}`; return lines.join("\n"); }
+  const table = lines.findIndex((l) => /^## /.test(l));
+  const end = table < 0 ? lines.length : table;
+  let last = -1;
+  for (let i = 0; i < end; i++) if (/^- [a-z][a-z0-9_]*:/.test(lines[i])) last = i;
+  lines.splice(last + 1, 0, `- ${key}: ${value}`);
+  return lines.join("\n");
+}
+
 // The browser every screenshot, PDF and video uses. Order: $CHROMIUM, the image's
 // Playwright Chromium, the one install-toolkit.sh unpacked into DATA, one on PATH.
 export function chromium() {
