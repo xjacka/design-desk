@@ -1962,6 +1962,7 @@
     // Designs is a developer's page, not a step up from the role below: each role that has it says so.
     [["designs", "built"], "See Designs: ask a design's designer, mark it done", null, "Designs"],
     [["people"], "Ask Design Desk to add people to the list"],
+    [["settings"], "Change Design Desk's settings"],
   ];
   // How it works: one picture each of how a request, an issue and a shipped pull request move.
   const flowHead = (id) => `<defs><marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="f-h" d="M0 0L10 5L0 10z"/></marker></defs>`;
@@ -3537,7 +3538,7 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
       ["proposals", "Design proposals", "Design Desk proposes designs for new features on its own.", "on"],
       ["max_proposals_per_week", "Proposals a week", "At most this many a week.", "num", { unit: "a week", max: 20, needs: "proposals" }],
       ["spec_review", "Read the spec before it goes", "A person reads, edits and sends the developer spec; off, it goes on its own.", "on"],
-      ["issue_writeback", "Design back into its issue", "A feature's approved design is written back into the GitHub issue it came from.", "on"],
+      ["issue_writeback", "Design back into its issue", "A feature's approved design is written back into the GitHub issue it came from, and a request from an issue may send its spec there as a comment.", "on"],
       ["handoff", "Where ideas and proposals go", "Once approved.", "pick", { options: [["desk", "Stay on the Desk"], ["issue", "A GitHub issue"], ["draft-pr", "A draft pull request"]] }],
       ["max_prototypes", "Live prototypes at once", "0: none.", "num", { unit: "at once", max: 10 }],
       ["prototype_expiry_days", "A live prototype runs for", "Then it is taken down.", "num", { unit: "days", min: 1, max: 60 }],

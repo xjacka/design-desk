@@ -109,9 +109,11 @@ const SETTABLE = {
   figma: ["disabled", ON], screens: ["disabled", ON], issue_news: ["disabled", ON], desk_ping: ["enabled", ON],
   decisions_page: ["off", ["off", "dam"]], mcp_satellite: ["disabled", ["disabled", "when-awake", "always"]],
 };
-// A number key reads `off` as 0, as its readers do.
+// A number key reads `off` as 0, as its readers do; a key's older spelling reads as its readers
+// read it (`decisions_page: public` is `dam`, scripts/preflight.sh), so the switch shows what runs.
+const ALIASES = { decisions_page: { public: "dam" } };
 const settingValues = () => Object.fromEntries(Object.entries(SETTABLE).map(([k, [d, ok]]) => {
-  const v = cfg(k, d);
+  const raw = cfg(k, d), v = ALIASES[k]?.[raw] || raw;
   return [k, typeof ok[0] === "number" ? (v === "off" ? "0" : /^\d+$/.test(v) ? v : d) : ok.includes(v) ? v : d];
 }));
 function setSetting(key, value) {
