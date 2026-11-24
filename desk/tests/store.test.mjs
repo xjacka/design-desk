@@ -2828,6 +2828,49 @@ test("a merged change that builds an approved design adds its elements to the de
   assert.equal(s.listCards({ kind: "element" }).length, 1, "a second write adds nothing twice");
 });
 
+test("Approve picks where the spec of a request from an issue goes; Send in another form has it rewritten first", () => {
+  const s = fresh();
+  const issue = s.upsertCard({ kind: "issue", title: "See spend", status: "open", bucket: "sprint", source: { repo: "acme/widgets", issue: 41, url: "https://github.com/acme/widgets/issues/41" } }).card;
+  const { card } = s.createRequest(alice, { title: "Spend column", problem: "Spend is hidden.", from: issue.id });
+  assert.equal(s.getCard(card.id).from_issue.issue, 41);
+  const html = s.addAsset({ kind: "variant", contentType: "text/html", data: Buffer.from("<p>A</p>").toString("base64") }).asset.id;
+  s.upsertCard({ id: card.id, triage: { verdict: "design" }, status: "feedback", variants: [{ id: "v1", name: "Column", asset: html }] });
+  assert.throws(() => s.act(card.id, alice, "approve", "v1", { target: "pr-comment" }), /no longer open/);
+  const { inbox } = s.act(card.id, alice, "approve", "v1", { target: "issue-comment" });
+  assert.equal(inbox.target, "issue-comment");
+  assert.equal(inbox.comment_on, "https://github.com/acme/widgets/issues/41");
+  assert.equal(s.getCard(card.id).approved.target, "issue-comment");
+  for (const i of Object.values(s.db.inbox)) if (i.card === card.id) i.state = "done";
+  const spec = s.addAsset({ card: card.id, kind: "spec", name: "spec.md", contentType: "text/markdown", data: "# Spec", encoding: "utf8" }).asset.id;
+  s.upsertCard({ id: card.id, status: "spec", spec: { asset: spec, review: "draft", target: "issue-comment" } });
+  // Sent as a new issue: written as a comment, so it is rewritten first.
+  const re = s.specAction(card.id, alice, { action: "send", target: "issue" });
+  assert.equal(re.rewrite, true);
+  assert.equal(re.inbox.scope, "spec-revise");
+  assert.equal(re.inbox.target, "issue");
+  assert.equal(s.getCard(card.id).spec.review, "changes");
+  re.inbox.state = "done";
+  s.upsertCard({ id: card.id, spec: { asset: spec, review: "draft", target: "issue" } });
+  const { inbox: go } = s.specAction(card.id, alice, { action: "send", target: "issue" });
+  assert.equal(go.scope, "deliver");
+  assert.equal(go.target, "issue");
+  assert.equal(s.getCard(card.id).spec.sent.target, "issue");
+});
+
+test("a pull request's Approve marks it handled and asks for the design approval comment", () => {
+  const s = fresh();
+  const { card } = s.upsertCard({ kind: "change", title: "Tighter rows", source: { repo: "acme/widgets", pr: 32, url: "https://github.com/acme/widgets/pull/32" } });
+  s.handle(card.id, alice, true, { approve: true });
+  assert.equal(s.getCard(card.id).handled.approve, true);
+  const item = Object.values(s.db.inbox).find((i) => i.card === card.id && i.kind === "ci");
+  assert.equal(item.scope, "approve");
+  item.state = "done";
+  s.handle(card.id, alice, false);
+  assert.equal(Object.values(s.db.inbox).filter((i) => i.card === card.id && i.kind === "ci" && i.state === "open").length, 1, "taken back: the comment says so");
+  const { card: merged } = s.upsertCard({ kind: "change", title: "Shipped", source: { repo: "acme/widgets", pr: 33, merged_at: "2026-11-10T10:00:00Z" } });
+  assert.throws(() => s.handle(merged.id, alice, true, { approve: true }), /open is approved/);
+});
+
 test("a request made from an open pull request: its spec waits, and goes back to that pull request as a comment", () => {
   const s = fresh();
   const { card: change } = s.upsertCard({ kind: "change", title: "Tighter rows", source: { repo: "acme/widgets", pr: 31, url: "https://github.com/acme/widgets/pull/31" } });

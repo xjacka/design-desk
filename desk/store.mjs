@@ -155,6 +155,11 @@ export const ISSUE_BUCKETS = ["sprint", "next", "assigned", "label"];
 // writes the deadline, `undo_until`, and the page shows Undo only before it
 // (docs/desk.md → The presentation).
 const endOfDay = (iso) => { const t = Date.parse(iso); return Number.isNaN(t) ? null : new Date(Math.floor(t / 864e5) * 864e5 + 864e5 - 1000).toISOString().replace(/\.\d{3}Z$/, "Z"); };
+// Where a sent spec goes (docs/handoff.md → Where it goes): back to the issue or the open pull
+// request the request came from, as a comment, or a new issue, or straight to the coding agent.
+// A comment and an issue read differently: the spec is written in its target's form.
+const TARGETS = ["issue-comment", "pr-comment", "issue", "agent"];
+const formOf = (t) => (["issue-comment", "pr-comment"].includes(t) ? "comment" : "issue");
 const INBOX_KINDS = ["question", "request", "explore", "revise", "states", "build", "handoff", "teardown", "follow-up", "catalog", "map", "agenda", "figma", "screens", "slack", "draw", "person", "decision", "decision-check", "ci"];
 // Where a screen on a card came from: the pull request, the agent's screens instance, a
 // person, a live prototype, or a rebuild drawn from the code.
@@ -376,7 +381,7 @@ export class Store {
     const p = join(this.dir, "inbox.json"), tmp = `${p}.tmp-${process.pid}`;
     writeFileSync(tmp, JSON.stringify(doc, null, 1));
     renameSync(tmp, p);
-    function pick(i) { return { id: i.id, kind: i.kind, card: i.card, thread: i.thread || null, created: i.created, ...(priv.has(i.thread) ? { private: true, context: priv.get(i.thread) } : {}), ...(i.person ? { person: i.person } : {}), ...(i.scope ? { scope: i.scope } : {}), ...(i.ask_first ? { ask_first: true } : {}), ...(i.implement ? { implement: true } : {}), ...(i.close_earlier ? { close_earlier: i.close_earlier } : {}), ...(i.comment_on ? { comment_on: i.comment_on } : {}), ...(i.variant ? { variant: i.variant } : {}), ...(i.element ? { element: i.element } : {}), ...(i.part ? { part: i.part } : {}) }; }
+    function pick(i) { return { id: i.id, kind: i.kind, card: i.card, thread: i.thread || null, created: i.created, ...(priv.has(i.thread) ? { private: true, context: priv.get(i.thread) } : {}), ...(i.person ? { person: i.person } : {}), ...(i.scope ? { scope: i.scope } : {}), ...(i.ask_first ? { ask_first: true } : {}), ...(i.implement ? { implement: true } : {}), ...(i.close_earlier ? { close_earlier: i.close_earlier } : {}), ...(i.comment_on ? { comment_on: i.comment_on } : {}), ...(i.target ? { target: i.target } : {}), ...(i.variant ? { variant: i.variant } : {}), ...(i.element ? { element: i.element } : {}), ...(i.part ? { part: i.part } : {}) }; }
   }
 
   next(kind, prefix) { this.db.seq[kind] += 1; return `${prefix}-${this.db.seq[kind]}`; }
@@ -579,6 +584,34 @@ export class Store {
     return { card: ch.id, pr: ch.source.pr, repo: ch.source.repo || null, url: ch.source.url || null };
   }
 
+  // The issue a request came from: its Issues card while it is open (`request.from`), or the
+  // GitHub issue it was filed from (`origin`); its spec may go back to it as a comment
+  // (docs/handoff.md → Where it goes). The deliver skill checks its state again before it writes.
+  fromIssue(c) {
+    if (c.kind !== "request") return null;
+    const ch = c.request?.from ? own(this.db.cards, c.request.from) : null;
+    if (ch?.kind === "issue") return ch.status === "archived" || !ch.source?.issue ? null : { card: ch.id, issue: ch.source.issue, repo: ch.source.repo || null, url: ch.source.url || null };
+    const o = c.origin;
+    return o?.channel === "github" && o.kind === "issue" && o.number ? { card: null, issue: o.number, repo: o.repo || null, url: o.url || null } : null;
+  }
+
+  // A target a person picked, checked against where the request came from; with it, the URL a
+  // comment goes to (`comment_on`).
+  targetOf(c, target) {
+    if (!TARGETS.includes(target)) throw bad(`target must be one of ${TARGETS.join(", ")}`);
+    if (target === "issue-comment") {
+      const i = this.fromIssue(c);
+      if (!i) throw bad("This request did not come from an open issue: send the spec as a new issue.");
+      return { target, comment_on: i.url || `${i.repo}#${i.issue}` };
+    }
+    if (target === "pr-comment") {
+      const pr = this.fromPr(c);
+      if (!pr) throw bad("The pull request it came from is no longer open: send the spec as an issue.");
+      return { target, comment_on: pr.url || `${pr.repo}#${pr.pr}` };
+    }
+    return { target };
+  }
+
   // The Issues card of the issue a request's spec went to, once the issues run carded it.
   sentCardOf(c) {
     const key = c.kind === "request" ? issueKey(c.spec?.issue_url) : null;
@@ -635,7 +668,7 @@ export class Store {
     // Each decision the card cites, with its words and whether it is still in force.
     const cited = Object.fromEntries([...(c.decisions || []), ...(c.impact?.decisions || []).map((x) => x.id).filter(Boolean), ...shapedBy(c)]
       .map((id) => { const d = own(this.db.decisions, id); return [id, { text: d?.text || "", status: d?.status || "revoked" }]; }));
-    return { ...c, conflicts, cited, attention: this.attentionOf(c), ...(["request", "change", "issue"].includes(c.kind) ? { for: this.forOf(c) } : {}), ...(c.kind === "request" ? { from_pr: this.fromPr(c) } : {}), designed: this.designedOf(c), sent_card: this.sentCardOf(c), builds: this.buildsOf(c), threads: (c.threads || []).map((t) => this.db.threads[t]).filter((t) => sees(t, viewer)), waiting: this.waitingFor(c.id, viewer) };
+    return { ...c, conflicts, cited, attention: this.attentionOf(c), ...(["request", "change", "issue"].includes(c.kind) ? { for: this.forOf(c) } : {}), ...(c.kind === "request" ? { from_pr: this.fromPr(c), from_issue: this.fromIssue(c) } : {}), designed: this.designedOf(c), sent_card: this.sentCardOf(c), builds: this.buildsOf(c), threads: (c.threads || []).map((t) => this.db.threads[t]).filter((t) => sees(t, viewer)), waiting: this.waitingFor(c.id, viewer) };
   }
 
   // The ids of a request's shared parts (docs/requests.md → The same elements in every option). The
@@ -679,8 +712,13 @@ export class Store {
 
   // A designer marks a change handled: design has nothing more to do with it. Until then
   // the page counts the days it waits (config `change_due_days`).
-  handle(cardId, who, on = true) {
+  handle(cardId, who, on = true, { approve = false } = {}) {
     const c = this.card(cardId);
+    // Approve, on a change whose pull request is open: marked handled, and the pull request gets one
+    // comment that it is a design approval only (docs/watch.md → Design approval).
+    const gh = c.kind === "change" && c.source?.pr ? own(this.db.github, issueKey(c.source.url) || (c.source.repo ? `${String(c.source.repo).toLowerCase()}#${c.source.pr}` : "")) : null;
+    const approving = on && approve && c.kind === "change" && Boolean(c.source?.pr) && !c.source?.merged_at && c.status !== "archived" && !(gh?.state && !/^open$/i.test(gh.state));
+    if (approve && !approving) throw bad("Only a change whose pull request is open is approved.");
     if (!["change", "issue"].includes(c.kind)) throw bad("only a change or an issue is marked handled");
     // A lead developer marks a change For Developers handled; one that goes against a decision
     // in force stays a designer's (docs/desk.md → For Developers or For Designers).
@@ -691,8 +729,11 @@ export class Store {
     // An issue keeps its status, which its run sets: handled only takes it off the Desk's lists
     // and out of drawing (docs/issues.md → On the Desk).
     if (c.kind === "issue") { if (on) c.handled = { by: person(who), at: this.clock() }; else delete c.handled; }
-    else if (on) { c.status = "handled"; c.handled = { by: person(who), at: this.clock() }; }
-    else { c.status = "new"; delete c.handled; }
+    else if (on) { c.status = "handled"; c.handled = { by: person(who), at: this.clock(), ...(approving ? { approve: true } : {}) }; }
+    else { const was = c.handled?.approve; c.status = "new"; delete c.handled;
+      // Taken back: the approval comment says so (docs/watch.md → Design approval).
+      if (was) { const it = this.pendingOrNew("ci", c.id, who, "Approval taken back: say so in the approval comment."); it.scope = "approve"; } }
+    if (approving) { const it = this.pendingOrNew("ci", c.id, who, "Approved: post the design approval on the pull request."); it.scope = "approve"; }
     // A change whose pull request Design Desk's check holds (`ci_gate`, docs/watch.md → CI
     // gate): the check follows the mark, so the run sets it again — passed once handled.
     if (c.kind === "change" && ["failing", "passing"].includes(c.ci?.state)) this.pendingOrNew("ci", c.id, who, on ? "Marked handled: pass the check." : "Marked not handled: hold the check again.");
@@ -1592,7 +1633,7 @@ export class Store {
   }
 
   // A state change a person asks for on a request card; the agent does the work.
-  act(cardId, who, action, note = "", { askFirst = false, count = null, overrule = false, implement = false, closeEarlier = false, autoSend = false, variant = null, version = null, states = null, part = null, element = null } = {}) {
+  act(cardId, who, action, note = "", { askFirst = false, count = null, overrule = false, implement = false, closeEarlier = false, autoSend = false, target = null, variant = null, version = null, states = null, part = null, element = null } = {}) {
     const c = this.card(cardId);
     // Check again: Design Desk takes the screen's pictures again on the live product; the same
     // pictures mark it checked, new ones redraw it (docs/map.md → Check again).
@@ -1716,6 +1757,9 @@ export class Store {
     // prototype; a developer on a request For Developers, once there are options (docs/desk.md → Deciding straight away).
     const direct = who?.agent || can(who?.role, "skip");
     if (action === "approve") mustBeChecked(c, "Approve");
+    // Where the spec goes, picked on Approve: it is written in that form (docs/handoff.md → Where it goes).
+    const aim = action === "approve" && target ? this.targetOf(c, target) : null;
+    if (aim) implement = aim.target === "agent";
     // Before options are on the card, an approval does not race the drawing of them.
     if (action === "approve" && ["triage", "variants"].includes(c.status) && Object.values(this.db.inbox).some((i) => i.state !== "done" && i.card === cardId && ["explore", "revise"].includes(i.kind) && i.scope !== "now"))
       throw bad("Design Desk is still drawing the options. Approve once they are here.");
@@ -1752,7 +1796,7 @@ export class Store {
     if (against.length) c.overruled = { by: person(who), at: this.clock(), decisions: against };
     else if (action === "approve") delete c.overruled;
     // Who approved, shown on the card; an approval For Developers says so (`small`).
-    if (action === "approve") c.approved = { by: person(who), at: this.clock(), small: Boolean(c.size?.small), ...(implement ? { implement: true } : {}),
+    if (action === "approve") c.approved = { by: person(who), at: this.clock(), small: Boolean(c.size?.small), ...(implement ? { implement: true } : {}), ...(aim ? { target: aim.target } : {}),
       ...(shown ? { variant: shown.variant, version: shown.version } : (c.variants || []).some((v) => v.id === note) ? { variant: note } : {}) };
     // The approver sends the spec unread, as soon as it is written (docs/handoff.md → Review
     // before it goes); never a request from Slack, whose spec always waits for a person.
@@ -1772,6 +1816,7 @@ export class Store {
     if (action === "build" && askFirst) item.ask_first = true;
     // Straight to the coding agent: the handoff labels its issue (docs/handoff.md, step 5).
     if (action === "approve" && implement) item.implement = true;
+    if (aim) { item.target = aim.target; if (aim.comment_on) item.comment_on = aim.comment_on; }
     // Sent before and reopened: the new send closes the earlier issue too (docs/handoff.md, step 6).
     if (action === "approve" && closeEarlier && earlierSend(c)) item.close_earlier = earlierSend(c);
     if (stateOf) {
@@ -1794,7 +1839,7 @@ export class Store {
   // Design Desk writes the spec as a draft (`spec.review: "draft"`); a person reads it, edits
   // it, asks for changes, or sends it. Only a send lets it leave the Desk (docs/handoff.md →
   // Review before it goes). Every version stays: an edit or a rewrite keeps the one it replaces.
-  specAction(cardId, who, { action, text = "", note = "", implement = null, closeEarlier = false, comment = false } = {}) {
+  specAction(cardId, who, { action, text = "", note = "", implement = null, closeEarlier = false, comment = false, target = null } = {}) {
     const c = this.card(cardId);
     if (who?.agent) throw forbidden("A person reads the spec and sends it; Design Desk writes it.");
     if (c.kind !== "request" || c.status !== "spec" || !c.spec?.asset) throw bad("There is no developer spec to look at yet.");
@@ -1822,20 +1867,36 @@ export class Store {
       return { card: c, inbox: item };
     }
     if (action === "send") {
-      // Here the person picks the route: an issue for developers, or straight to the coding
-      // agent with its label (`implement`); left out, what Approve said holds.
-      // Or back to the open pull request it came from, as a comment (`comment_on`).
-      const pr = comment ? this.fromPr(c) : null;
-      if (comment && !pr) throw bad("The pull request it came from is no longer open: send the spec as an issue.");
-      const straight = pr ? false : implement == null ? Boolean(c.approved?.implement) : Boolean(implement);
-      c.spec = { ...c.spec, review: "sent", sent: { by: person(who), at, implement: straight, ...(pr ? { comment_on: pr.url || `${pr.repo}#${pr.pr}` } : {}) } };
-      if (c.approved) c.approved = { ...c.approved, implement: straight || undefined };
+      // Here the person picks the route (docs/handoff.md → Where it goes): back to the issue or the
+      // open pull request it came from as a comment, a new issue, or straight to the coding agent
+      // (`implement`, `comment` from before `target`); left out, what Approve picked holds.
+      const want = target || (comment ? "pr-comment" : implement != null ? (implement ? "agent" : "issue") : null);
+      const kept = !want && c.approved?.target ? (() => { try { return this.targetOf(c, c.approved.target); } catch { return null; } })() : null;
+      const aim = want ? this.targetOf(c, want) : kept;
+      const straight = aim ? aim.target === "agent" : Boolean(c.approved?.implement);
+      // Written for a comment and sent as an issue, or the other way: Design Desk rewrites it in the
+      // new form first, and it comes back to be read (docs/handoff.md → Where it goes).
+      if (aim && c.spec.target && formOf(aim.target) !== formOf(c.spec.target)) {
+        const ask = aim.target === "issue-comment" ? "Rewrite it as a comment on the issue it came from."
+          : aim.target === "pr-comment" ? "Rewrite it as a comment on the pull request it came from." : "Rewrite it as a new issue for developers.";
+        c.spec = { ...c.spec, review: "changes", asked: { by: person(who), at, note: ask } };
+        c.approved = { ...c.approved, target: aim.target, ...(straight ? { implement: true } : {}) };
+        if (!straight) delete c.approved.implement;
+        c.updated = at;
+        const item = this.enqueue("handoff", cardId, null, who, ask);
+        item.scope = "spec-revise"; item.target = aim.target;
+        this.save();
+        return { card: c, inbox: item, rewrite: true };
+      }
+      c.spec = { ...c.spec, review: "sent", sent: { by: person(who), at, implement: straight, ...(aim ? { target: aim.target } : {}), ...(aim?.comment_on ? { comment_on: aim.comment_on } : {}) } };
+      if (c.approved) c.approved = { ...c.approved, implement: straight || undefined, ...(aim ? { target: aim.target } : {}) };
       if (c.approved && !straight) delete c.approved.implement;
       c.updated = at;
       const item = this.enqueue("handoff", cardId, null, who, c.approved?.variant || "");
       item.scope = "deliver";
       if (straight) item.implement = true;
-      if (pr) item.comment_on = pr.url || `${pr.repo}#${pr.pr}`;
+      if (aim) item.target = aim.target;
+      if (aim?.comment_on) item.comment_on = aim.comment_on;
       if (closeEarlier && earlierSend(c)) item.close_earlier = earlierSend(c);
       this.save();
       return { card: c, inbox: item };

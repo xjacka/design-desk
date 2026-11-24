@@ -124,7 +124,17 @@ there instead of out. The body's last line before the marker names the Desk card
     Set `spec.pr_url`.
     Never mark it ready, never merge.
 
-**Back to its pull request** (the handoff item's `comment_on`, [docs/handoff.md](../../../docs/handoff.md)
+The item's `target` ([docs/handoff.md](../../../docs/handoff.md) → Where it goes) overrides the
+type: `issue` → a new issue as for an `idea` with `handoff: issue`; `agent` → as `implement`.
+
+**Back to its issue** (`target: issue-comment`, the item's `comment_on` an issue): read it first
+(`gh issue view <url> --json state`). Open → one comment as for a `feature` above, the spec's
+newest version as its body; set `spec.issue_url` to the comment's URL. Closed → a new issue
+instead, in the issue form ([docs/handoff.md](../../../docs/handoff.md) → Where it goes: the card
+title as its title, the Summary and Why added to the comment's sections), and say so on the card in
+one agent comment; the same for a closed pull request below.
+
+**Back to its pull request** (`target: pr-comment`, the item's `comment_on` a pull request, [docs/handoff.md](../../../docs/handoff.md)
 → Review before it goes): read it first (`gh pr view <url> --json state`). Open → one comment
 on it with the spec, the pictures, the bundle and `implementer_mention` as its first line when
 set, ending with the marker; set `spec.pr_url` to the pull request's URL, so its change card

@@ -3347,6 +3347,41 @@ test("a send after a reopen shows the earlier issue's state and assignee, and cl
   assert.equal(await desk.evaluate(() => posts.find((p) => p.path === "/api/cards/C-1/spec").body.close_earlier), true);
 }));
 
+// Where the spec goes (docs/handoff.md → Where it goes): a request from an issue.
+const routesBridge = (over) => sendsBridge("designer", { sends: [], from_issue: { card: "I-1", issue: 41, repo: "acme/widgets", url: "https://github.com/acme/widgets/issues/41" }, ...over }).replace("spec_review: true,", "spec_review: true, issue_writeback: true,");
+
+test("Approve of a request from an issue asks where the spec goes, its comment picked", (t) => open(t, routesBridge({ status: "feedback" }), async (desk) => {
+  await desk.evaluate(() => { location.hash = "#C-1"; });
+  await desk.click('#detail [data-act="approve"]');
+  await desk.waitForSelector("#cf-routes-wrap:not([hidden])");
+  assert.match(await desk.textContent("#cf-routes"), /As a comment on issue #41[\s\S]*As a new issue for developers[\s\S]*Straight to the coding agent/);
+  assert.equal(await desk.isChecked('[name="route"][value="issue-comment"]'), true, "the comment on its issue first and picked");
+  await desk.click("#cf-ok");
+  await desk.waitForFunction(() => posts.some((p) => p.path === "/api/cards/C-1/actions"));
+  assert.equal(await desk.evaluate(() => posts.find((p) => p.path === "/api/cards/C-1/actions").body.target), "issue-comment");
+}));
+
+test("Send to developers picks Approve's target; another form says the spec is rewritten first", (t) => open(t, routesBridge({ status: "spec", approved: { by: { email: "designer@example.com", role: "designer" }, at: "2026-11-07T13:00:00Z", variant: "v1", target: "issue-comment" }, spec: { asset: "A-3", review: "draft", target: "issue-comment" } }), async (desk) => {
+  await desk.evaluate(() => { location.hash = "#C-1"; });
+  await desk.click("[data-spec-send]");
+  await desk.waitForSelector('#cf-choices [value="issue-comment"]');
+  assert.equal(await desk.isChecked('#cf-choices [value="issue-comment"]'), true);
+  assert.match(await desk.textContent("#confirm-dialog"), /written as a comment[\s\S]*rewrites it in that form first/);
+  await desk.check('#cf-choices [value="issue"]');
+  await desk.click("#cf-ok");
+  await desk.waitForFunction(() => posts.some((p) => p.path === "/api/cards/C-1/spec"));
+  assert.equal(await desk.evaluate(() => posts.find((p) => p.path === "/api/cards/C-1/spec").body.target), "issue");
+}));
+
+test("an open pull request's change has a green Approve: handled, with the design approval comment", (t) => open(t, sendsBridge("designer", { kind: "change", status: "new", sends: [], source: { repo: "acme/widgets", pr: 45, url: "https://github.com/acme/widgets/pull/45" } }).replace("reopen: true,", "reopen: true, handle: true,"), async (desk) => {
+  await desk.evaluate(() => { location.hash = "#C-1"; });
+  await desk.click("#detail [data-pr-approve]");
+  assert.match(await desk.textContent("#confirm-dialog"), /Approve the design of PR #45\?[\s\S]*Design approval only/);
+  await desk.click("#cf-ok");
+  await desk.waitForFunction(() => posts.some((p) => p.path === "/api/cards/C-1/handled"));
+  assert.deepEqual(await desk.evaluate(() => posts.find((p) => p.path === "/api/cards/C-1/handled").body), { handled: true, approve: true });
+}));
+
 test("only an admin reopens a sent request, from ⋯, behind a confirmation", (t) => open(t, sendsBridge("admin", { status: "handed-off", sends: [], approved: { by: { email: "alice@example.com", role: "designer" }, at: "2026-11-05T09:00:00Z", variant: "v1" }, spec: { issue_url: "https://github.com/acme/widgets/issues/142", review: "sent" } }), async (desk) => {
   await desk.evaluate(() => { location.hash = "#C-1"; });
   await desk.click("#detail .status details.more > summary");

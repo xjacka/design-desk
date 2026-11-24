@@ -7,6 +7,19 @@ why lives in the PR and commit history, not here. Consumed by the version check
 ([docs/persistence.md](docs/persistence.md) → **Definition version & upgrade**);
 authoring rules: [docs/self-modification.md](docs/self-modification.md) §12.
 
+## 1.104.0 — 2026-11-24
+
+**Upgrade:**
+1. Restart the Desk server ([desk.md](docs/desk.md) → Server) and republish the page
+   ([desk.md](docs/desk.md) → Publishing the page). Approve of a request from an issue or an open
+   pull request asks where its spec goes — a comment on that issue or pull request (the default),
+   a new issue, or the coding agent — and the spec is written in that form; Send to developers
+   picks it first, and another form sends the spec back to be rewritten (`target`,
+   [handoff.md](docs/handoff.md) → Where it goes). An open pull request's change gets a green
+   **Approve**: marked handled, and one comment on the pull request that it is a design approval
+   only ([watch.md](docs/watch.md) → CI gate, Design approval). No data migration: a card without
+   `target` is sent as before.
+
 ## 1.103.0 — 2026-11-24
 
 **Upgrade:**

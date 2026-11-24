@@ -216,6 +216,26 @@ Merged and closed pull requests are never touched: their checks no longer matter
   again, save after a failed write (`retry: true`, below) and a `skipped` with no `tries`
   (before 1.76.0 a PR judged and not held: its check is set now). A pre-flight that cannot read the
   cards logs an error line and leaves the run open, never an empty list.
+- **Design approval** — a `ci_due` item with `scope: "approve"`: a person pressed **Approve** on
+  the change (the card's `handled.approve`), or took that mark back. It writes whatever `ci_gate`
+  says, set only when the card has `ci` (as below); and, `ci_gate` or not, one comment on the open
+  pull request, found by its first line `<!-- design-desk approve=<card id> -->` as above, edited
+  in place, else created; the body from a file:
+
+  ```markdown
+  <!-- design-desk approve=<card id> -->
+  **Design approval only:** <name> (<role>) approved the design of this UI change on the Design Desk.
+
+  This is not a code review: it approves no code.
+
+  <[Open on the Design Desk](<card link>), when `desk_link` is set>
+  ```
+
+  The person by their roster name, else the part of the address before the @; never an address.
+  Taken back (the card no longer `handled.approve`) → only an existing comment is edited, its first
+  line then "**Design approval taken back** on the Design Desk."; none → nothing. A merged or
+  closed PR → `design desk done` with "PR no longer open"; a failed write is logged
+  (`logev warn ci …`) and done with `--outcome "not posted: <cause>"`, reported in the chat UI.
 - **`ci_due`** (inbox run), a `Q-<n>` item: a person marked the card handled, took the mark
   back, or moved it between For Developers and For Designers. Claim; read the card and the
   PR again and set the check as in **Set it** on the current head (`ci_gate` now `disabled`

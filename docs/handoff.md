@@ -15,7 +15,7 @@ sent; the developer or coding agent gets only answers.
    revise), it is what the prototype shows: the card's `live_pick` — its option, `version` and
    assets (`live_pick.asset`, `states[].asset`), which `approved.variant` and `approved.version`
    repeat; write the spec from those, not from a newer version drawn since.
-2. Write `/tmp/design-desk-r<n>/spec.md` in plain words ([desk.md](desk.md) → Writing on the
+2. Write `/tmp/design-desk-r<n>/spec.md` in the form of its target ([Where it goes](#where-it-goes)), in plain words ([desk.md](desk.md) → Writing on the
    Desk): a developer reads it, but so do the designers who approved it. These sections:
    - **Summary** — the problem and the approved direction, three sentences.
    - **Why** — the request in your own words, the decisions taken on the Desk (which
@@ -50,7 +50,7 @@ sent; the developer or coding agent gets only answers.
    same list on the card as `spec.acceptance: [{given, when, then, state?, story?}]`: the
    bundle carries it to the coding agent.
 3. Upload it (`design desk asset spec.md --kind spec`) and set `spec: {asset, acceptance,
-   review: "draft"}`; the card shows it under **The developer spec**. With `spec_review:
+   review: "draft", target}` (`target` the form it is written in, when the item or `approved` names one); the card shows it under **The developer spec**. With `spec_review:
    disabled`, or the card's `approved.auto_send` (the approver ticked **Send it as soon as the
    spec is written**; the store never sets it on a request from Slack), write `review: "sent"`, except for a request with a Slack `origin` or a `from_pr`, which always
    waits (until a person's Send to developers, the store refuses `review: "sent"` and
@@ -84,10 +84,31 @@ card the people who may approve it read the spec, and:
   `spec: {asset, acceptance, review: "draft"}`, `done --outcome review`;
 - **Send to developers** — a `handoff` item with `scope: "deliver"`: go on at step 5 with the
   spec's newest version exactly as it is, never rewritten. Here the person picks the route,
-  where it goes to GitHub: **As an issue for developers**, or **Straight to the coding agent**
-  (the item's `implement`, the issue labelled for it; step 6), or, for a request made from a
-  change whose pull request is still open (`from_pr`), **As a comment on PR #n** (the item's
-  `comment_on`, the default there). Approve then asks no such thing; with `spec_review: disabled` Approve still does.
+  where it goes to GitHub ([Where it goes](#where-it-goes)), the one Approve picked first.
+
+## Where it goes
+
+The item's `target` (and the card's `approved.target`, `spec.sent.target`):
+- `issue-comment` — back to the issue the request came from (`request.from` an open issue card,
+  or an `origin` of kind `issue`), as one comment; only with `issue_writeback` on;
+- `pr-comment` — back to the open pull request it came from (`from_pr`), as one comment;
+- `issue` — a new issue for developers;
+- `agent` — straight to the coding agent (the item's `implement`, the issue labelled for it; step 6).
+
+For a request from an issue or an open pull request, **Approve** asks where it goes, the comment
+first and picked; anywhere else Approve and Send ask as before (a new issue or the coding agent).
+With a comment target, `comment_on` is that issue's or pull request's URL. Write the spec in its
+target's form:
+- **a comment** — it answers the thread it lands in: no title, no Summary or Why that retells
+  the issue or the pull request; open with the approved design in a sentence, then The design,
+  Changes by screen, States, Copy, What a developer must add, Settled at handoff and the
+  Acceptance criteria; leave out what that thread already says;
+- **an issue** — read on its own: the card title as its title and every section of step 2.
+
+**Send to developers** picks the same target first. A target of the other form than the spec's
+`target` (a comment where an issue was written, or the other way) sends nothing: the store
+queues a `handoff` item with `scope: "spec-revise"` and that `target`; rewrite the spec in that
+form, upload it with `review: "draft"` and the new `target`, `done --outcome review`.
 ## Sending it
 
 5. **The bundle.** `design desk bundle R-<n> /tmp/design-desk-r<n>/handoff`: `spec.md` (the
@@ -128,8 +149,9 @@ card the people who may approve it read the spec, and:
    Deliver it with the `deliver` action's skill (`design skill deliver --repo <repo>`,
    [actions.md](actions.md); the bundled one is
    [`handoff-github`](../.agents/skills/handoff-github/SKILL.md)), with the approved option's
-   pictures, by the request's type — or, with the item's `comment_on`, as one comment
-   on that pull request whatever the type (the skill → Back to its pull request):
+   pictures, by the request's type — or by the item's `target` whatever the type: with
+   `comment_on`, as one comment on that issue or pull request (the skill → Back to its issue or
+   pull request); `issue` a new issue; `agent` as below:
    - `feature` (flow 1) — back to the issue it came from (`issue_writeback`), where a developer
      builds from it;
    - `adjustment` and `bug` (flows 2 and 3) — to the coding agent (`implementer`,

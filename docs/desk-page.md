@@ -373,7 +373,9 @@ says what its dot says (Up to date, Out of date, Being drawn, Not drawn) and hol
 force, Not approved or Revoked and holds **Approve** (when not approved), **Revoke…** or **Restore**. A week's page has no state: its chip says
 Weekly digest. Needs a designer carries a
 small AI tag: Design Desk judges what goes in it, the buttons (**Mark
-handled**, **Adjust the design**; **Design this**) and ⋯ for the presentation. **Draw it** sits
+handled**, **Adjust the design**; **Design this**; on a change whose pull request is open, a green
+**Approve**: marked handled, and one comment on the pull request that it is a design approval
+only, [watch.md](watch.md) → CI gate) and ⋯ for the presentation. **Draw it** sits
 under an issue's How it could look. A change and an issue show their GitHub state the same way, in the Desk's own inks (one green, one
 violet, one grey on every page, the green the same as Approved): a change's pull
 request **Draft** (grey), **Open** (green) or **Merged** (purple, `source.draft`, `source.merged_at`);

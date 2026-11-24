@@ -225,6 +225,30 @@ test("a request sent, reopened by an admin and sent again: Approve and Send to d
   assert.deepEqual([sent.status, sent.body.inbox.close_earlier], [200, "https://github.com/acme/widgets/issues/142"]);
 });
 
+test("where a spec goes: back to its issue only with issue_writeback on, never on a Desk-only route, a string only", async (t) => {
+  // An idea filed from a GitHub issue (its `origin`): `handoff: issue` sends it to GitHub, and back to its issue with `issue_writeback` on.
+  const fromIssue = async (d) => {
+    const id = (await d.agent("/agent/requests", { title: "Spend column", problem: "Spend is hidden.", type: "idea", options: 0,
+      origin: { channel: "github", kind: "issue", repo: "acme/widgets", number: 41, url: "https://github.com/acme/widgets/issues/41", reporter: "dana" } })).body.card.id;
+    assert.equal((await d.agent("/agent/cards", { id, triage: { verdict: "design", reasons: ["Only the look."] } })).status, 200);
+    return id;
+  };
+  const on = await desk(t, "- handoff: issue\n\n");
+  const a = await fromIssue(on);
+  assert.equal((await on.viewer("lou@example.com", `/api/cards/${a}/actions`, { action: "approve", note: "Grey.", target: 5 })).status, 400, "a target is a string");
+  const ok = await on.viewer("lou@example.com", `/api/cards/${a}/actions`, { action: "approve", note: "Grey.", target: "issue-comment" });
+  assert.equal(ok.status, 200);
+  assert.deepEqual([ok.body.card.approved.target, ok.body.inbox.comment_on], ["issue-comment", "https://github.com/acme/widgets/issues/41"]);
+  const off = await desk(t, "- handoff: issue\n- issue_writeback: disabled\n\n");
+  const b = await fromIssue(off);
+  const no = await off.viewer("lou@example.com", `/api/cards/${b}/actions`, { action: "approve", note: "Grey.", target: "issue-comment" });
+  assert.equal(no.status, 400);
+  assert.match(no.body.error, /issue_writeback/);
+  const deskOnly = await desk(t, "");
+  const c = await fromIssue(deskOnly);
+  assert.equal((await deskOnly.viewer("lou@example.com", `/api/cards/${c}/actions`, { action: "approve", note: "Grey.", target: "issue" })).status, 400, "a spec that stays on the Desk goes nowhere");
+});
+
 test("prototype_requesters reads a role as the roster does: `Lead developer` is lead-developer", async (t) => {
   const d = await desk(t, "- prototype_requesters: designer, Lead developer\n\n");
   const build = async (email) => (await d.viewer(email, "/api/me")).body.can.build;
