@@ -618,3 +618,26 @@ test("a redraw uploaded with --option carries the notes' names; a note whose par
   await d.agent("/agent/cards", { id: card.id, variants: [{ id: "v1", name: "Lists", asset: v3, version: 2 }] });
   assert.equal((await d.agent(`/agent/cards/${card.id}`)).body.card.threads.find((x) => x.id === c).anchor.gone, undefined, "a name the new version has again clears it");
 });
+
+// Settings (docs/desk.md → Settings): an admin's page; the server writes only the keys on its list.
+test("settings: only an admin reads and changes them; a key off the list or a value out of range is refused and nothing is written", async (t) => {
+  const d = await desk(t, "- display_name: Desk\n- ci_gate: disabled # on or off\n- decisions_page: public\n\n");
+  const config = () => readFileSync(join(d.env.WORK_DIR, "CONFIG.md"), "utf8");
+  const before = config();
+  for (const email of ["alice@example.com", "pat@example.com", "guest@example.com"]) {
+    assert.equal((await d.viewer(email, "/api/settings")).status, 403, email);
+    assert.equal((await d.viewer(email, "/api/settings", { key: "ci_gate", value: "enabled" })).status, 403, email);
+  }
+  const read = await d.viewer("lee@example.com", "/api/settings");
+  assert.equal(read.status, 200);
+  assert.deepEqual([read.body.values.ci_gate, read.body.values.decisions_page, read.body.values.change_due_days], ["disabled", "dam", "21"], "an older spelling reads as it runs; a missing key as its default");
+  for (const body of [{ key: "repos", value: "evil/x" }, { key: "max_prototypes", value: "99" }, { key: "ci_gate", value: "on" }, { key: "notify", value: "slack\n- repos: evil/x" }]) {
+    assert.equal((await d.viewer("lee@example.com", "/api/settings", body)).status, 400, body.key);
+    assert.equal(config(), before, `nothing written for ${body.key}`);
+  }
+  const write = await d.viewer("lee@example.com", "/api/settings", { key: "ci_gate", value: "enabled" });
+  assert.deepEqual([write.status, write.body], [200, { key: "ci_gate", value: "enabled" }]);
+  assert.equal(config(), before.replace("- ci_gate: disabled", "- ci_gate: enabled"), "only its bullet changes");
+  assert.equal((await d.viewer("own@example.com", "/api/settings", { key: "notify", value: "slack" }, "owner")).status, 200, "the owner is an admin");
+  assert.match(config(), /^- notify: slack$/m);
+});

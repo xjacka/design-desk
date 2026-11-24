@@ -64,6 +64,12 @@ test("one person's row may list every address they go by, and each counts as the
   assert.equal(s.unqueue(card.id, { email: "lukas@example.com", emails: ["lukas@example.com", "lukas.j@work.example.com"], role: "pm" }).card.agenda.status, "removed");
 });
 
+test("only an admin changes the settings", () => {
+  assert.equal(can("admin", "settings"), true);
+  for (const r of ["designer", "pm", "lead-developer", "developer", "guest"]) assert.equal(can(r, "settings"), false, r);
+  assert.ok(ACTIONS.includes("settings"));
+});
+
 test("an admin asks for a new person: one item with no card, the roster and open asks refuse twins", () => {
   assert.equal(can("admin", "people"), true);
   assert.equal(can("designer", "people"), false);

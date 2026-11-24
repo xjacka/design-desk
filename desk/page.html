@@ -825,6 +825,23 @@
   .pact-box.pact-none p { margin: 0; }
   @media (max-width: 700px) { .pact-box { grid-template-columns: 1fr; } .pact-spark { justify-self: start; text-align: left; } .pact-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
   @media (prefers-reduced-motion: reduce) { .people .who .chev { transition: none; } }
+  /* Settings (docs/config.md): one row a setting, its words on the left, its control on the right. */
+  .set-group { margin-top: 8px; }
+  .set-group > p.sub { margin: 0 0 8px; }
+  .set-panel { padding: 0; }
+  .set-row { display: flex; gap: 16px; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .set-row:last-child { border-bottom: 0; }
+  .set-row.blocked .set-text b { color: var(--muted); }
+  .set-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; cursor: pointer; font-size: var(--fs-ui); }
+  .set-text small { color: var(--muted); font-size: var(--fs-meta); }
+  .set-text small.set-needs { color: var(--warn, var(--muted)); }
+  .set-ctl { flex: none; display: flex; align-items: center; }
+  .set-ctl select, .set-num input { padding: 4px 8px; font: inherit; font-size: var(--fs-meta); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-sm); }
+  .set-num { display: inline-flex; align-items: center; gap: 8px; }
+  .set-num input { width: 64px; text-align: right; }
+  .set-ctl select:focus-visible, .set-num input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .set-ctl :disabled { opacity: .55; cursor: not-allowed; }
+  @media (max-width: 560px) { .set-row { flex-direction: column; align-items: stretch; } .set-ctl { justify-content: flex-start; } }
   .roles { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-top: 8px; }
   .roles .panel h4 { margin: 0 0 4px; display: flex; gap: 8px; align-items: center; } .roles .panel p { margin: 0 0 8px; color: var(--muted); font-size: var(--fs-meta); }
   .roles .panel ul { margin: 0; padding-left: 20px; font-size: var(--fs-meta); } .roles .panel li { margin-bottom: 4px; }
@@ -1945,6 +1962,7 @@
     // Designs is a developer's page, not a step up from the role below: each role that has it says so.
     [["designs", "built"], "See Designs: ask a design's designer, mark it done", null, "Designs"],
     [["people"], "Ask Design Desk to add people to the list"],
+    [["settings"], "Change Design Desk's settings"],
   ];
   // How it works: one picture each of how a request, an issue and a shipped pull request move.
   const flowHead = (id) => `<defs><marker id="${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="f-h" d="M0 0L10 5L0 10z"/></marker></defs>`;
@@ -2070,7 +2088,7 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
     },
     tab: (v) => ({ requests: "Requests: problems and ideas, their design options and live prototypes", new: "PR Changes: what changed in the product's screens, explained, and what a designer should look at",
       issues: "Issues: what the team plans that will change the screens, with sketches", product: "Product: its screens, its parts in every situation, the team's decisions and the weekly history",
-      people: "People: who is on the Desk, their roles and what each role can do", guide: "How Design Desk works" }[v]),
+      people: "People: who is on the Desk, their roles and what each role can do", settings: "Settings: what Design Desk does for this team, switched on or off", guide: "How Design Desk works" }[v]),
     filter: (v) => ({ "newFilter:open": "PR Changes no designer marked handled yet", "newFilter:handled": "PR Changes a designer marked handled", "newFilter:auto": "PR Changes Design Desk found nothing to look at, or that shipped long ago and nobody marked handled",
       "newFilter:designer": "Only changes that wait for a designer", "reqFilter:unread": "Requests you have not opened yet", "reqFilter:open": "Requests still being worked on", "reqFilter:turn": "Requests whose next move is yours: an answer, a vote, an approval, a spec to read", "reqFilter:presentation": "What the team shows at its next design meeting, in order",
       "chgFor:designers": "PR Changes a designer looks at", "chgFor:developers": "PR Changes a lead developer looks at: small differences, no new UI",
@@ -2380,7 +2398,7 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
   // Product and Issues leave the tabs, a sent request its Show the design, Product's pages their bar, the presentation its page and buttons,
   // and a request its buttons that build a live prototype and an option its Why it looks like
   // this strip (the design workspace keeps it). A link to anything in them still opens it: a D-3 in a request opens the decision.
-  const SIMPLE_HIDES = ["designs", "issues", "product", "people"];
+  const SIMPLE_HIDES = ["designs", "issues", "product", "people", "settings"];
   // A choice this browser has not saved yet wins (desk-simple-unsaved:<email>), then the person's
   // saved one; with neither, a viewer starts in simple mode and every other role in full mode.
   const simple = () => {
@@ -2920,7 +2938,7 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
 
   // ---------- header and list ----------
   // The tab of the product's changes keeps its key `new`, so older links (#new) still open it.
-  const TABS = { requests: "Requests", designs: "Designs", new: "PR Changes", issues: "Issues", product: "Product", people: "People", guide: "How it works" };
+  const TABS = { requests: "Requests", designs: "Designs", new: "PR Changes", issues: "Issues", product: "Product", people: "People", settings: "Settings", guide: "How it works" };
   // Links name the presentation, a filter on Requests, by its own word; #call is its old name.
   const VIEWS = { presentation: "presentation", call: "presentation", changes: "new" };
   const presenting = () => S.tab === "requests" && S.reqFilter === "presentation";
@@ -2965,8 +2983,8 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
     const sep = `<span class="sep" aria-hidden="true"></span>`;
     // Designs only for developers and admins; a designer reaches one from a notification (docs/desk-page.md → Designs).
     const designs = can("designs") ? [[["designs", designCards("todo").length]]] : [];
-    const html = [[["requests", open.length, asks && plural(asks, "request waits", "requests wait") + " for an answer"]], ...designs, [["new", unseen], ["issues", openIssues]], [["product"], ["people"]]]
-      .map((group) => group.filter(([k]) => !(simple() && SIMPLE_HIDES.includes(k)))).filter((group) => group.length)
+    const html = [[["requests", open.length, asks && plural(asks, "request waits", "requests wait") + " for an answer"]], ...designs, [["new", unseen], ["issues", openIssues]], [["product"], ["people"], ["settings"]]]
+      .map((group) => group.filter(([k]) => !(simple() && SIMPLE_HIDES.includes(k)) && (k !== "settings" || can("settings")))).filter((group) => group.length)
       .map((group) => group.map(tab).join("")).join(sep);
     // The poll redraws the menu every few seconds: an unchanged menu is left as it is, so a
     // tooltip stays open and keyboard focus stays where it was.
@@ -3346,12 +3364,12 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
   function renderListRows() {
     const list = $("#list");
     const main = $("#main");
-    main.classList.toggle("wide", S.tab === "guide" || S.tab === "people");
+    main.classList.toggle("wide", S.tab === "guide" || S.tab === "people" || S.tab === "settings");
     // Another tab, page or filter starts the list again at LIST_PAGE rows; it is
     // set before every early return, so a list that returns early still counts as another view.
     const view = [S.tab, S.productFilter, S.histBy, S.reqFilter, reqFor(), S.newFilter, S.designFilter, S.issueFilter, S.figFilter, S.elFilter].join("|");
     if (S.listView !== view) { S.listView = view; S.listLimit = LIST_PAGE; }
-    if (S.tab === "guide" || S.tab === "people") { list.innerHTML = ""; return; }
+    if (S.tab === "guide" || S.tab === "people" || S.tab === "settings") { list.innerHTML = ""; return; }
     // Differences kept from an earlier visit leaves once Figma is off, for the Desk or this person.
     if (S.productFilter === "differences" && !figmaOn()) S.productFilter = "screens";
     // Kit kept from an earlier visit leaves for someone who may not see it.
@@ -3501,6 +3519,89 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
       <h3>Roles</h3>
       <div class="roles">${roles}</div>`;
   }
+
+  // ---------- settings (docs/config.md) ----------
+  // Design Desk's switches and numbers from work/CONFIG.md, in plain words, by what they touch.
+  // An admin's page alone: the Desk server writes a change to work/CONFIG.md at once, no agent run
+  // needed (docs/desk.md → Settings). Each row: [key, label, what it does, kind, options].
+  // kind: "on" (enabled/disabled), "on:<value>" (that value or disabled), "num" (0 = off), "pick".
+  const SETTINGS = [
+    ["Pull requests", "What Design Desk does with the product's pull requests.", [
+      ["watch_open_prs", "Open pull requests get a card", "A change shows on PR Changes while its pull request is still open, not only once it is merged.", "on"],
+      ["ci_gate", "A check on GitHub", "Design Desk's check passes a pull request nobody needs to look at and fails one that waits for a designer, until it is marked handled.", "on"],
+      ["ci_gate_unsourced", "Fail a change with nothing to compare", "With the check on: a change with no approved design, Figma frame or kit part behind it fails too, until a designer marks it handled.", "on", { needs: "ci_gate" }],
+      ["review_post", "Post Desk reviews on GitHub", "A person's review of a change here is also posted on its pull request, as a comment.", "on"],
+      ["change_due_days", "Overdue after", "Days a change may wait for a designer before it shows red.", "num", { unit: "days", max: 365 }],
+      ["change_auto_handled_days", "Auto handled after", "Days after it shipped that a change nobody marked handled moves to Auto handled.", "num", { unit: "days", max: 365 }],
+    ]],
+    ["Requests", "How a request goes from an idea to developers.", [
+      ["proposals", "Design proposals", "Design Desk proposes designs for new features on its own.", "on"],
+      ["max_proposals_per_week", "Proposals a week", "At most this many a week.", "num", { unit: "a week", max: 20, needs: "proposals" }],
+      ["spec_review", "Read the spec before it goes", "A person reads, edits and sends the developer spec; off, it goes on its own.", "on"],
+      ["issue_writeback", "Design back into its issue", "A feature's approved design is written back into the GitHub issue it came from, and a request from an issue may send its spec there as a comment.", "on"],
+      ["handoff", "Where ideas and proposals go", "Once approved.", "pick", { options: [["desk", "Stay on the Desk"], ["issue", "A GitHub issue"], ["draft-pr", "A draft pull request"]] }],
+      ["max_prototypes", "Live prototypes at once", "0: none.", "num", { unit: "at once", max: 10 }],
+      ["prototype_expiry_days", "A live prototype runs for", "Then it is taken down.", "num", { unit: "days", min: 1, max: 60 }],
+    ]],
+    ["Slack", "What Design Desk does in the team's Slack channel.", [
+      ["notify", "Announce new cards", "Design Desk posts new cards and a request's steps in the channel.", "on:slack"],
+      ["bug_reports", "Bug reports from Slack", "A message about something broken on a screen goes on the Desk's queue.", "on"],
+      ["slack_polls", "Votes in Slack", "Options can be shared in Slack for 👍 / 👎 votes and replies.", "on"],
+      ["slack_send", "Send the designs to Slack", "Pictures of a request's options can be posted to the channel.", "on"],
+      ["slack_council", "Ask for changes in a thread", "Anyone on the list asks for changes in a request's thread and gets new options back there.", "on"],
+      ["slack_stale_days", "Remind a request that stands still", "Days a request from Slack may stay unchanged before its thread gets one reminder. 0: never.", "num", { unit: "days", max: 90 }],
+      ["digest", "Weekly digest", "Where the week's UX digest goes.", "pick", { options: [["desk", "The Desk"], ["slack", "The Desk and Slack"], ["disabled", "Nowhere"]] }],
+    ]],
+    ["Product and tools", "What else Design Desk keeps for the team.", [
+      ["figma", "Figma", "Imports, exports and comparisons with Figma. Needs Figma connected.", "on"],
+      ["screens", "Its own install of the product", "For pictures of the screens and for people to try a change.", "on"],
+      ["issue_news", "Issues page", "The open issues that will change the screens, read once a day.", "on"],
+      ["desk_ping", "Wake Design Desk at once", "What you send here is picked up right away, not on the next round.", "on"],
+      ["decisions_page", "Public decisions page", "Every decision, without names, on one public page for coding agents.", "on:dam", { off: "off" }],
+      ["mcp_satellite", "Other agents on the Desk", "The owner's other agents read the Desk and put work on it over MCP. Works only after the owner set up its key and service once.", "pick", { options: [["disabled", "Off"], ["when-awake", "While the machine is awake"], ["always", "Always"]] }],
+    ]],
+  ];
+  async function loadSettings() {
+    try { S.settings = await api("GET", "/api/settings"); }
+    // A refusal (not an admin) says so; anything else is a failed load.
+    catch (e) { S.settings = { error: e instanceof Said ? e.message : `Settings can't be loaded right now. Try again in a minute; if it keeps happening, tell ${contact()}.` }; }
+  }
+  // A switch reads its key as on unless it says it is off ("disabled", or the row's own word for off).
+  const settingOn = (v, kind) => kind === "on" ? v !== "disabled" : v === kind.slice(3);
+  function settingRow([key, label, about, kind, o = {}], vals, edit) {
+    const v = vals[key];
+    const blocked = o.needs && !settingOn(vals[o.needs], "on");
+    const dis = !edit || blocked ? " disabled" : "";
+    const id = `set-${key}`;
+    const why = blocked ? `<small class="set-needs">Turn on ${esc(SETTINGS.flatMap((g) => g[2]).find((r) => r[0] === o.needs)?.[1] || o.needs)} first.</small>` : "";
+    let control;
+    if (kind.startsWith("on")) control = `<label class="switch set-switch"><input type="checkbox" role="switch" id="${id}" data-setting="${key}" data-kind="${kind}"${o.off ? ` data-off="${esc(o.off)}"` : ""}${settingOn(v, kind) ? " checked" : ""}${dis} aria-label="${esc(label)}" /></label>`;
+    else if (kind === "num") control = `<span class="set-num"><input type="number" id="${id}" data-setting="${key}" data-kind="num" value="${esc(/^\d+$/.test(v) ? v : "0")}" min="${o.min ?? 0}" max="${o.max ?? 999}" step="1"${dis} aria-label="${esc(label)}" />${o.unit ? `<span class="hint">${esc(o.unit)}</span>` : ""}</span>`;
+    else control = `<select id="${id}" data-setting="${key}" data-kind="pick"${dis} aria-label="${esc(label)}">${o.options.map(([val, words]) => `<option value="${esc(val)}"${val === v ? " selected" : ""}>${esc(words)}</option>`).join("")}</select>`;
+    return `<div class="set-row${blocked ? " blocked" : ""}"><label class="set-text" for="${id}"><b>${esc(label)}</b><small>${esc(about)}</small>${why}</label><div class="set-ctl">${control}</div></div>`;
+  }
+  function renderSettings() {
+    const P = S.settings;
+    if (!P) return `<div class="empty">Loading…</div>`;
+    if (P.error) return `<h2>Settings</h2><div class="panel">${esc(P.error)}</div>`;
+    const edit = can("settings") && P.editable !== false;
+    const groups = SETTINGS.map(([title, about, rows]) => `<section class="set-group"><div class="sec-head"><h3>${esc(title)}</h3></div><p class="sub">${esc(about)}</p><div class="panel set-panel">${rows.map((r) => settingRow(r, P.values || {}, edit)).join("")}</div></section>`).join("");
+    return `<h2>Settings</h2>
+      <p class="sub">What Design Desk does for this team. A change is saved at once. Design Desk works by it from its next round; this page, the next time it loads.</p>
+      ${groups}`;
+  }
+  // An admin's change to one setting: saved as it is made, put back when it fails.
+  const saveSetting = guard(async (input) => {
+    const key = input.dataset.setting, kind = input.dataset.kind;
+    const value = kind === "num" ? String(Math.max(Number(input.min) || 0, Math.min(Number(input.max) || 999, Math.round(Number(input.value) || 0))))
+      : kind === "pick" ? input.value
+      : input.checked ? (kind === "on" ? "enabled" : kind.slice(3)) : (input.dataset.off || "disabled");
+    try { const r = await api("POST", "/api/settings", { key, value });
+      S.settings.values = { ...S.settings.values, [r.key]: r.value };
+      toast("Saved.");
+      if (S.tab === "settings") renderDetail(); }
+    catch (err) { if (S.tab === "settings") renderDetail(); throw err; }
+  });
 
   // ---------- decisions (docs/desk.md → Decisions) ----------
   const ORIGIN_KIND = { pr: "Pull request", issue: "Issue", commit: "Commit", doc: "Architecture page", slack: "Slack", desk: "A comment on the Desk", call: "The presentation", approval: "An approval on the Desk", chat: "Chat with Design Desk", other: "Source" };
@@ -7243,12 +7344,13 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
   function renderDetailBody() {
     const d = $("#detail");
     // Every open item, decision and People fill the pane: each part is as wide as the page (`.fill`).
-    d.classList.toggle("fill", Boolean(S.card || S.decision || (S.productFilter === "kit" && S.kitPart) || (S.productFilter === "history" && S.histAt)) || S.tab === "people");
+    d.classList.toggle("fill", Boolean(S.card || S.decision || (S.productFilter === "kit" && S.kitPart) || (S.productFilter === "history" && S.histAt)) || S.tab === "people" || S.tab === "settings");
     const now = [S.tab, S.card?.id || "", S.decision?.id || "", S.kitPart || "", S.productFilter === "history" ? `${S.histBy}:${S.histAt || ""}` : "", presenting() ? "p" : ""].join("|");
     if (now !== shown) { shown = now; d.scrollTop = 0; scrollTo(0, 0); d.classList.remove("enter"); void d.offsetWidth; d.classList.add("enter"); clearTimeout(entered); entered = setTimeout(() => d.classList.remove("enter"), 400); }
-    $("#main").classList.toggle("has-detail", Boolean(S.card) || S.tab === "guide" || presenting() || S.tab === "people");
+    $("#main").classList.toggle("has-detail", Boolean(S.card) || S.tab === "guide" || presenting() || S.tab === "people" || S.tab === "settings");
     if (S.tab === "guide") { d.innerHTML = `<div class="guide">${GUIDE()}</div>`; return; }
     if (S.tab === "people") { d.innerHTML = `<div class="guide">${renderPeople()}</div>`; return; }
+    if (S.tab === "settings") { d.innerHTML = `<div class="guide">${renderSettings()}</div>`; return; }
     if (presenting() && !S.card) { renderAgendaDetail(); return; }
     if (S.tab === "product" && S.productFilter === "kit") {
       d.innerHTML = renderKit();
@@ -7328,6 +7430,7 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
     S.justRead.clear();
     S.tab = tab; S.card = null; S.ws.open = false; renderWorkspace(); renderNav(); renderBanners(); renderList(); renderDetail();
     if (tab === "people") { await loadPeople(); if (S.tab === "people") renderDetail(); }
+    if (tab === "settings") { await loadSettings(); if (S.tab === "settings") renderDetail(); }
   }
 
   // ---------- links to an item (docs/desk.md → Links to an item) ----------
@@ -8252,6 +8355,7 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
 
   document.addEventListener("input", (e) => { if (e.target.dataset?.plColor) lookSet(e.target.dataset.plColor, e.target.value); });
   document.addEventListener("change", (e) => {
+    if (e.target.dataset?.setting) { saveSetting(e.target); return; }
     if (e.target.dataset?.plColor) { lookSet(e.target.dataset.plColor, e.target.value); e.target.blur(); renderWorkspace(); return; }
     if ("outline" in e.target.dataset) { showOutline(e.target.checked); return; }
     // The final check keeps "Ask me first" across its redraws (a step to a state, a new version).
