@@ -7496,7 +7496,7 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
         ...(against.length ? { check: `I know it goes against ${against.join(", ")}` } : {}),
         ...(routes ? { routes, routePick: routeDefault(c, routes), routesLabel: "Where should the spec go? Design Desk writes it in that form." } : {}),
         ...(github && !routes && !waits ? { check2: `Straight to implementation: the spec goes on ${to.startsWith("the GitHub issue it came from") ? "that issue" : "a GitHub issue (a new one, with the spec and pictures, if none is filed)"} with the coding agent's label, when its manifest names one` } : {}),
-        ...(unread ? { check2: `Send it to ${to} as soon as the spec is written, without waiting for me to read it. Once sent, it can't be taken back` } : {}),
+        ...(unread ? { check2: `Send it ${routes ? "where you picked above" : `to ${to}`} as soon as the spec is written, without waiting for me to read it. Once sent, it can't be taken back` } : {}),
         ...(earlier?.open ? { check3: unread ? `${earlier.check} (only with the box above ticked; else you pick it when you send)` : earlier.check } : {}),
         send: (a) => post(built?.id || a.choice || a.note || "", { ...(against.length ? { overrule: a.check } : {}), ...(a.check2 ? (unread ? { auto_send: true } : { implement: true }) : {}), ...(a.route ? { target: a.route } : {}), ...(a.check3 && (!unread || a.check2) ? { close_earlier: true } : {}) }) });
       if (!res) return;

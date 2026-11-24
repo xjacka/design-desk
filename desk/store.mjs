@@ -716,7 +716,8 @@ export class Store {
     const c = this.card(cardId);
     // Approve, on a change whose pull request is open: marked handled, and the pull request gets one
     // comment that it is a design approval only (docs/watch.md → Design approval).
-    const approving = on && approve && c.kind === "change" && Boolean(c.source?.pr) && !c.source?.merged_at && c.status !== "archived";
+    const gh = c.kind === "change" && c.source?.pr ? own(this.db.github, issueKey(c.source.url) || (c.source.repo ? `${String(c.source.repo).toLowerCase()}#${c.source.pr}` : "")) : null;
+    const approving = on && approve && c.kind === "change" && Boolean(c.source?.pr) && !c.source?.merged_at && c.status !== "archived" && !(gh?.state && !/^open$/i.test(gh.state));
     if (approve && !approving) throw bad("Only a change whose pull request is open is approved.");
     if (!["change", "issue"].includes(c.kind)) throw bad("only a change or an issue is marked handled");
     // A lead developer marks a change For Developers handled; one that goes against a decision
