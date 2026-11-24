@@ -2827,7 +2827,8 @@ test("Approve picks where the spec of a request from an issue goes; Send in anot
   const issue = s.upsertCard({ kind: "issue", title: "See spend", status: "open", bucket: "sprint", source: { repo: "acme/widgets", issue: 41, url: "https://github.com/acme/widgets/issues/41" } }).card;
   const { card } = s.createRequest(alice, { title: "Spend column", problem: "Spend is hidden.", from: issue.id });
   assert.equal(s.getCard(card.id).from_issue.issue, 41);
-  s.upsertCard({ id: card.id, triage: { verdict: "design" }, status: "feedback", variants: [{ id: "v1", name: "Column" }] });
+  const html = s.addAsset({ kind: "variant", contentType: "text/html", data: Buffer.from("<p>A</p>").toString("base64") }).asset.id;
+  s.upsertCard({ id: card.id, triage: { verdict: "design" }, status: "feedback", variants: [{ id: "v1", name: "Column", asset: html }] });
   assert.throws(() => s.act(card.id, alice, "approve", "v1", { target: "pr-comment" }), /no longer open/);
   const { inbox } = s.act(card.id, alice, "approve", "v1", { target: "issue-comment" });
   assert.equal(inbox.target, "issue-comment");
