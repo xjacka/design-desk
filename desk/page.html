@@ -1640,7 +1640,7 @@
     <button class="btn primary" id="new-request" hidden>+ New request</button>
     <div class="grow"></div>
     <div class="search"><input class="goto" id="goto" type="search" placeholder="Search, or R-12, D-3, #4512" role="combobox" aria-expanded="false" aria-controls="hits" aria-label="Search the Desk: words, an item's number like C-12, a decision's like D-3, a GitHub issue or pull request number, or a link" title="Search requests, changes, issues, screens, elements and decisions. A number opens its item: C-12, D-3, or a GitHub issue or pull request like #4512" autocomplete="off" spellcheck="false" /><div id="hits" role="listbox" hidden></div></div>
-    <details class="more me-menu"><summary class="me" id="me" aria-label="Your menu"></summary><div class="menu"><div class="me-who" id="me-who"></div><button class="btn" id="help" type="button" data-tab="guide" title="How Design Desk works, with a picture of each flow">? How it works</button><button class="btn" id="simple" type="button" aria-pressed="false"></button><button class="btn" id="figma" type="button" aria-pressed="true" hidden></button><button class="btn" id="theme" type="button"></button></div></details>
+    <details class="more me-menu"><summary class="me" id="me" aria-label="Your menu"></summary><div class="menu"><div class="me-who" id="me-who"></div><button class="btn" id="help" type="button" data-tab="guide" title="How Design Desk works, with a picture of each flow">? How it works</button><button class="btn" id="settings-btn" type="button" data-tab="settings" title="What Design Desk does for this team, switched on or off" hidden>Settings</button><button class="btn" id="simple" type="button" aria-pressed="false"></button><button class="btn" id="figma" type="button" aria-pressed="true" hidden></button><button class="btn" id="theme" type="button"></button></div></details>
     <details class="more bell" id="bell"><summary id="bell-btn" aria-label="Notifications" title="Notifications: what happened lately on the Desk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg><span class="badge" id="bell-count" hidden></span></summary><div class="menu notes" id="notes" role="dialog" aria-label="Notifications"></div></details>
   </header>
   <div class="banners" id="banners"></div>
@@ -3004,14 +3004,16 @@ ${full(`<li>The first live prototype: up to an hour; later ones are faster.</li>
     const sep = `<span class="sep" aria-hidden="true"></span>`;
     // Designs only for developers and admins; a designer reaches one from a notification (docs/desk-page.md → Designs).
     const designs = can("designs") ? [[["designs", designCards("todo").length]]] : [];
-    const html = [[["requests", open.length, asks && plural(asks, "request waits", "requests wait") + " for an answer"]], ...designs, [["new", unseen], ["issues", openIssues]], [["product"], ["people"], ["settings"]]]
-      .map((group) => group.filter(([k]) => !(simple() && SIMPLE_HIDES.includes(k)) && (k !== "settings" || can("settings")))).filter((group) => group.length)
+    const html = [[["requests", open.length, asks && plural(asks, "request waits", "requests wait") + " for an answer"]], ...designs, [["new", unseen], ["issues", openIssues]], [["product"], ["people"]]]
+      .map((group) => group.filter(([k]) => !(simple() && SIMPLE_HIDES.includes(k)))).filter((group) => group.length)
       .map((group) => group.map(tab).join("")).join(sep);
     // The poll redraws the menu every few seconds: an unchanged menu is left as it is, so a
     // tooltip stays open and keyboard focus stays where it was.
     const nav = $("#nav");
     if (nav.drawn !== html) keepFocus(nav, () => { nav.innerHTML = html; nav.drawn = html; });
     $("#help").setAttribute("aria-current", String(S.tab === "guide"));
+    // Settings sits in your menu, under How it works: an admin's only, hidden in the simple view.
+    const set = $("#settings-btn"); set.hidden = !can("settings") || simple(); set.setAttribute("aria-current", String(S.tab === "settings"));
   }
 
   function renderBanners() {

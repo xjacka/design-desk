@@ -163,11 +163,12 @@ worklist does not need it; what a run does on the Desk is in [desk.md](desk.md).
   GitHub, in the profile's repository (`repos`); a Desk number with no item says so.
 - **The menu.** **Requests** leads it (its count amber while one waits for an
   answer); **PR Changes** (the product's shipped changes, key `new`) and **Issues** follow, every
-  tab alike, only the open one marked, every count grey, then **Product**, **People** and, for an admin, **Settings** ([desk.md](desk.md) → Settings); **+ New request** follows behind one more
+  tab alike, only the open one marked, every count grey, then **Product** and **People**; **+ New request** follows behind one more
   separator. The bell at the far right, after the person's name, opens
   [Notifications](#notifications). **How it works** opens from the question
   mark next to the day and night switch, with a picture each of how a request, an issue and a
-  shipped pull request move. The switch keeps each person's choice on the Desk
+  shipped pull request move. An admin's **Settings** ([desk.md](desk.md) → Settings) is in the
+  menu under the person's name, below How it works. The switch keeps each person's choice on the Desk
   (`POST /api/prefs {theme}`, `theme` in `GET /api/me`; null follows the system), so it follows
   them to every device; the browser keeps a copy named for them only to open without a flash, marked unsaved until
   the server takes it, and sent again on the next load.

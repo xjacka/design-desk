@@ -571,7 +571,7 @@ page) makes the row say it can't be shown right now, never zeros.
 
 ## Settings
 
-An admin's page, beside People, alone in the menu for them: Design Desk's switches and numbers,
+An admin's page, in the menu under their name below How it works, there for them alone: Design Desk's switches and numbers,
 in four groups (pull requests, requests, Slack, product and tools). A change is written to
 `work/CONFIG.md` by the Desk server itself, at once, with no inbox item and no agent run:
 `POST /api/settings {key, value}`, the `settings` ability (admin), under the config lock
